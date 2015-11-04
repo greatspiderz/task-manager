@@ -1,0 +1,39 @@
+version = '0.0.1-SNAPSHOT'
+
+// This is root project gradle file, it has no code only sub projects, sub projects have java code.
+apply plugin: 'java'
+apply plugin: 'idea'
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+        maven { url 'http://repo.maven.apache.org/maven2' }
+    }
+
+
+    dependencies {
+        compile group: 'joda-time', name: 'joda-time', version: '2.3'
+    }
+
+
+}
+
+
+
+//gradle wrapper
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.6'
+}
+
+
+jar {
+    baseName = 'task-manager'
+    version = '0.0.1-SNAPSHOT'
+}

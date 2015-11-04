@@ -1,0 +1,58 @@
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+version = '1.0'
+
+allprojects {
+
+    group = 'com.tasks.manager'
+}
+
+
+
+subprojects {
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+
+
+        compile 'joda-time:joda-time:2.3',
+                'org.jadira.usertype:usertype.jodatime:2.0.1',
+                'com.fatboyindustrial.gson-jodatime-serialisers:gson-jodatime-serialisers:1.1.0',
+                'com.google.guava:guava:15.0',
+                'mysql:mysql-connector-java:5.1.28',
+                'org.hibernate:hibernate-entitymanager:4.3.11.Final',
+                'org.hibernate:hibernate-envers:4.3.11.Final',
+                'org.hibernate:hibernate-core:4.3.11.Final',
+                'com.zaxxer:HikariCP:2.4.1',
+                'org.modelmapper:modelmapper:0.6.3',
+                'io.federecio:dropwizard-swagger:0.5.2',
+                'net.sf.dozer:dozer:5.5.1',
+                'com.googlecode.genericdao:dao-hibernate:1.2.0',
+                'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final',
+                'com.fasterxml.jackson.core:jackson-databind:2.4.2',
+                'org.projectlombok:lombok:1.16.4',
+                'com.github.oxo42:stateless4j:2.5.0',
+                'com.ganyo:gcm-server:1.0.2',
+                'com.google.code.gson:gson:2.3.1',
+                'org.antlr:stringtemplate:3.2'
+    }
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        events 'passed', 'failed', 'skipped'
+    }
+}
+
+task createWrapper(type: Wrapper) {
+    gradleVersion = '2.1'
+}
+
+
