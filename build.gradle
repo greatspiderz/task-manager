@@ -26,7 +26,14 @@ allprojects {
         compile group: 'org.projectlombok', name: 'lombok', version: '1.16.4'
         compile 'javax.validation:validation-api:1.0.0.GA'
         compile 'com.google.inject:guice:3.0'
-        compile 'com.google.inject.extensions:guice-persist:3.0-rc3'
+
+        compile group: 'org.hibernate', name: 'hibernate-core', version: '4.3.11.Final'
+        compile group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.0.Final'
+        compile group: 'javax.inject', name: 'javax.inject', version: '1'
+        compile group: 'com.google.inject.extensions', name: 'guice-persist', version: '4.0'
+        compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.0'
+        compile group: 'com.github.oxo42', name: 'stateless4j', version:'2.5.0'
+
     }
 
 

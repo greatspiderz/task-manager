@@ -52,8 +52,8 @@ public class TaskDao extends BaseDaoJPA<Task> {
         throw new TaskNotFoundException(id);
     }
 
-    public List<Task> searchTask(){
-
-    }
+//    public List<Task> searchTask(){
+//
+//    }
 
 }

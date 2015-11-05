@@ -18,9 +18,9 @@ public class TaskAttributesDao extends BaseDaoJPA<TaskAttributes> {
         entityClass = TaskAttributes.class;
     }
 
-    public TaskAttributes fetchByTaskId(long taskId)
-    {
-
-    }
+//    public TaskAttributes fetchByTaskId(long taskId)
+//    {
+//
+//    }
 
 }
