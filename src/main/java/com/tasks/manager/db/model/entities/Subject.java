@@ -2,6 +2,7 @@ package com.tasks.manager.db.model.entities;
 
 import lombok.Data;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 /**
@@ -10,6 +11,8 @@ import javax.persistence.Embeddable;
 @Embeddable
 @Data
 public class Subject {
+    @Column(name = "subject_type")
     private String type;
+    @Column(name = "subject_id")
     private String id;
 }

@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.tasks.manager.db.dao.jpa.TaskAttributesDao;
 import com.tasks.manager.db.dao.jpa.TaskDao;
 import com.tasks.manager.db.dao.jpa.TaskGroupDao;
+import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
@@ -14,6 +15,8 @@ import com.tasks.manager.util.StateMachineProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -53,7 +56,9 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     @Transactional
     @Override
     public Task createTask(Task task, long tgId) {
-        taskDao.save(task, tgId);
+        TaskGroup taskGroup = tgDao.fetchById(tgId);
+        task.setTaskGroup(taskGroup);
+        taskDao.save(task);
         return task;
     }
 
@@ -64,20 +69,20 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Transactional
     @Override
-    public void updateActor(long taskId, Actor actor) {
+    public void updateActor(long taskId, Actor actor) throws TaskNotFoundException {
         taskDao.updateActor(taskId,actor);
 
     }
 
     @Transactional
     @Override
-    public void updateSubject(long taskId, Subject subject) {
+    public void updateSubject(long taskId, Subject subject) throws TaskNotFoundException {
         taskDao.updateSubject(taskId, subject);
     }
 
     @Transactional
     @Override
-    public void updateStatus(long taskId, TaskStatus newStatus) {
+    public void updateStatus(long taskId, TaskStatus newStatus) throws TaskNotFoundException {
         Task task = fetchTask(taskId);
         updateTaskStateMachine(task, newStatus);
 
@@ -93,7 +98,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Transactional
     @Override
-    public void updateETA(long taskId, long eta) {
+    public void updateETA(long taskId, long eta) throws TaskNotFoundException{
         taskDao.updateETA(taskId, eta);
 
     }
@@ -105,6 +110,14 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Override
     public List<Task> findTasksForAttributes(String key, String value) {
-        return taskAttributesDao.findTask(key, value);
+
+        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(key, value);
+        Iterator<TaskAttributes> iterator = taskAttributes.iterator();
+        List<Task> tasks = new ArrayList<>();
+        while (iterator.hasNext()) {
+            TaskAttributes taskAttribute = iterator.next();
+            tasks.add(taskAttribute.getTask());
+        }
+        return tasks;
     }
 }

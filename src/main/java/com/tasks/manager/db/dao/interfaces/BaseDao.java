@@ -7,7 +7,7 @@ import javax.persistence.EntityManager;
  */
 public interface BaseDao<T> {
 
-    T save(T entity);
+    void save(T entity);
 
     T fetchById(long id);
 
