@@ -1,4 +1,4 @@
-package com.tasks.manager.db.entities;
+package com.tasks.manager.db.model.entities;
 
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 @Data
-public class Subject {
+public class Actor {
     private String type;
     private String id;
 }
