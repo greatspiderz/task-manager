@@ -2,11 +2,10 @@ package com.tasks.manager.db.dao.jpa;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import com.tasks.manager.db.dao.interfaces.BaseDao;
+import com.tasks.manager.db.dao.interfaces.IBaseDao;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Order;
 
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
@@ -18,13 +17,13 @@ import java.util.List;
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
-public class BaseDaoJPA<T> implements BaseDao<T> {
+public class BaseDao<T> implements IBaseDao<T> {
 
     private final Provider<EntityManager> entityManagerProvider;
     protected Class<T> entityClass;
 
     @Inject
-    public BaseDaoJPA(Provider<EntityManager> entityManagerProvider) {
+    public BaseDao(Provider<EntityManager> entityManagerProvider) {
         this.entityManagerProvider = entityManagerProvider;
     }
 
@@ -63,6 +62,11 @@ public class BaseDaoJPA<T> implements BaseDao<T> {
         return entityClass;
     }
 
+    @Override
+    public EntityManager getEntityManager() {
+        return entityManagerProvider.get();
+    }
+
     protected List<T> findByCriteria(final Criterion... criterion) {
         Session session = (Session) getEntityManager().getDelegate();
         Criteria crit = session.createCriteria(getEntityClass());
@@ -81,9 +85,5 @@ public class BaseDaoJPA<T> implements BaseDao<T> {
         return result;
     }
 
-    @Override
-    public EntityManager getEntityManager() {
-        return entityManagerProvider.get();
-    }
 
 }

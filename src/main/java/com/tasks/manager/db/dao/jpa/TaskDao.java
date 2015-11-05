@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
-public class TaskDao extends BaseDaoJPA<Task> {
+public class TaskDao extends BaseDao<Task> {
 
     @Inject
     public TaskDao(Provider<EntityManager> entityManagerProvider) {

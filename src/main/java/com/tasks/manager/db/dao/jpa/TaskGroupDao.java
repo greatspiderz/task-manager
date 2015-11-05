@@ -9,7 +9,8 @@ import javax.persistence.EntityManager;
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
-public class TaskGroupDao extends BaseDaoJPA<TaskGroup>  {
+
+public class TaskGroupDao extends BaseDao<TaskGroup> {
 
     @Inject
     public TaskGroupDao(Provider<EntityManager> entityManagerProvider) {

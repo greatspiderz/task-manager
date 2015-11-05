@@ -5,7 +5,7 @@ import javax.persistence.EntityManager;
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
-public interface BaseDao<T> {
+public interface IBaseDao<T> {
 
     void save(T entity);
 

@@ -2,9 +2,7 @@ package com.tasks.manager.db.dao.jpa;
 
 
 import com.google.inject.Inject;
-import com.tasks.manager.db.model.entities.Task;
 import com.tasks.manager.db.model.entities.TaskAttributes;
-import com.tasks.manager.db.model.entities.TaskGroup;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
@@ -15,7 +13,7 @@ import java.util.List;
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
-public class TaskAttributesDao extends BaseDaoJPA<TaskAttributes> {
+public class TaskAttributesDao extends BaseDao<TaskAttributes> {
     @Inject
     public TaskAttributesDao(Provider<EntityManager> entityManagerProvider) {
         super(entityManagerProvider);
@@ -30,4 +28,6 @@ public class TaskAttributesDao extends BaseDaoJPA<TaskAttributes> {
         Criterion searchCriterion = Restrictions.and(keyCriterion, valueCriterion);
         return findByCriteria(searchCriterion);
     }
+
+
 }
