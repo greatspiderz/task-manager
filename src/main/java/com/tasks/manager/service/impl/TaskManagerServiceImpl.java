@@ -35,7 +35,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         this.taskStateMachineConfig = stateMachineProvider.get();
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public TaskGroup createTaskGroup(TaskGroup taskgroup) {
         tgDao.save(taskgroup);
@@ -47,7 +47,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return tgDao.fetchById(tgId);
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public Task createTask(Task task, long tgId) {
         taskDao.save(task, tgId);
@@ -59,21 +59,21 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.fetchById(taskId);
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public void updateActor(long taskId, Actor actor) {
         taskDao.updateActor(taskId,actor);
 
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public void updateSubject(long taskId, Subject subject) {
         taskDao.updateSubject(taskId, subject);
 
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public void updateStatus(long taskId, TaskStatus newStatus) {
         Task task = fetchTask(taskId);
@@ -89,7 +89,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         task.setStatus(newStatus);
     }
 
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public void updateETA(long taskId, long eta) {
         taskDao.updateETA(taskId, eta);
