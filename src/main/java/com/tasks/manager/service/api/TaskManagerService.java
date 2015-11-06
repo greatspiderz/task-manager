@@ -1,6 +1,7 @@
 package com.tasks.manager.service.api;
 
 import com.google.inject.ImplementedBy;
+import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.Actor;
 import com.tasks.manager.db.model.entities.Subject;
 import com.tasks.manager.db.model.entities.Task;
@@ -26,13 +27,13 @@ public interface TaskManagerService {
 
     Task fetchTask ( long taskId );
 
-    void updateActor(long taskId, Actor actor);
+    void updateActor(long taskId, Actor actor) throws TaskNotFoundException;
 
-    void updateSubject(long taskId, Subject subject);
+    void updateSubject(long taskId, Subject subject) throws TaskNotFoundException;
 
-    void updateStatus( long taskId, TaskStatus newStatus);
+    void updateStatus( long taskId, TaskStatus newStatus) throws TaskNotFoundException;
 
-    void updateETA( long taskId, long eta);
+    void updateETA( long taskId, long eta) throws TaskNotFoundException;
 
     List<Task> findTasks(SearchDto searchdto);
 

@@ -1,7 +1,7 @@
 package com.tasks.manager.db.model.entities;
 
 import com.fasterxml.jackson.annotation.*;
-import com.sun.istack.internal.NotNull;
+import javax.validation.constraints.NotNull;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
