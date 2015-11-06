@@ -10,6 +10,7 @@ import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import com.tasks.manager.service.impl.TaskManagerServiceImpl;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -37,7 +38,7 @@ public interface TaskManagerService {
 
     List<Task> findTasks(SearchDto searchdto);
 
-    List<Task> findTasksForAttributes(String key, String value);
+    List<Task> findTasksForAttributes(HashMap<String, String> attibuteNameValue);
 
 
 

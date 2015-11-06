@@ -2,7 +2,7 @@ package com.tasks.manager.db.dao.jpa;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import com.tasks.manager.db.dao.interfaces.IBaseDao;
+import com.tasks.manager.db.dao.interfaces.BaseDao;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
@@ -10,20 +10,22 @@ import org.hibernate.criterion.Criterion;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
-public class BaseDao<T> implements IBaseDao<T> {
+public class BaseDaoImpl<T> implements BaseDao<T> {
 
     private final Provider<EntityManager> entityManagerProvider;
     protected Class<T> entityClass;
 
     @Inject
-    public BaseDao(Provider<EntityManager> entityManagerProvider) {
+    public BaseDaoImpl(Provider<EntityManager> entityManagerProvider) {
         this.entityManagerProvider = entityManagerProvider;
     }
 
@@ -78,12 +80,26 @@ public class BaseDao<T> implements IBaseDao<T> {
         return result;
     }
 
-    protected List<T> findByQuery(final String queryStr)
+    @Override
+    public List<T> findByQuery(final String queryStr)
     {
         Query query = getEntityManager().createQuery(queryStr);
         final List<T> result = (List<T>) query.getResultList();
         return result;
     }
 
+    @Override
+    public List<T> findByQueryAndNamedParams(final Integer firstResult, final Integer maxResults,
+                                             @NotNull final String queryStr, @NotNull final Map<String, ?> params) {
+        Query query = getEntityManager().createQuery(queryStr);
+        for (final Map.Entry<String, ? extends Object> param : params.entrySet()) {
+            query.setParameter(param.getKey(), param.getValue());
+        }
+
+        if(firstResult != null) query.setFirstResult(firstResult);
+        if(maxResults != null) query.setMaxResults(maxResults);
+        final List<T> result = (List<T>) query.getResultList();
+        return result;
+    }
 
 }
