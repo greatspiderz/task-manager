@@ -87,6 +87,26 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
             queryParamStringList.add("t.status = :status");
             namedParamMapBuilder.put("status", searchDto.getStatus());
         }
+
+        if(searchDto.getType()!=null)
+        {
+            queryParamStringList.add("t.type = :type");
+            namedParamMapBuilder.put("type", searchDto.getType());
+        }
+        if(searchDto.getTaskGroupId()!=null)
+        {
+            queryParamStringList.add("t.task_group_id = :task_group_id");
+            namedParamMapBuilder.put("task_group_id", searchDto.getTaskGroupId());
+        }
+
+        if(searchDto.getActor()!=null)
+        {
+            queryParamStringList.add("t.actor_id = :actor_id");
+            namedParamMapBuilder.put("actor_id", searchDto.getActor().getId());
+            queryParamStringList.add("t.actor_type = :actor_type");
+            namedParamMapBuilder.put("actor_type", searchDto.getActor().getType());
+        }
+
         ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
         queryString.append(String.join( " and ", queryParamStringList));
         List<Task> taskResults = new ArrayList<>();

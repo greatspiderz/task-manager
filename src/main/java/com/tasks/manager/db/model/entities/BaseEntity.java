@@ -47,6 +47,4 @@ public class BaseEntity {
     @JsonIgnore
     @Convert(converter = JodaDateTimeConverter.class)
     private DateTime updatedAt;
-
-    public Long getId(){ return id; }
 }

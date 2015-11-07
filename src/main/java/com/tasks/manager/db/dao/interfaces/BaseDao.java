@@ -22,7 +22,7 @@ public interface BaseDao<T> {
     Class<T> getEntityClass();
 
     EntityManager getEntityManager();
-    List<T> findByQuery(final String queryStr);
+    int executeQuery(final String queryStr);
     List<T> findByQueryAndNamedParams(final Integer firstResult, final Integer maxResults,
                                       @NotNull final String queryStr, @NotNull final Map<String, ?> params);
 }

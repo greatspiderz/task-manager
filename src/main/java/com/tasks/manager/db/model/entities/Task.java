@@ -26,7 +26,7 @@ import java.util.List;
 public class Task extends BaseEntity{
 
     @NotNull
-    @Column(name = "status", columnDefinition = "enum('NEW','COMPLETED')")
+    @Column(name = "status", columnDefinition = "enum('NEW','IN_PROGRESS','CANCELLED','COMPLETED')")
     private String status;
 
     @Embedded

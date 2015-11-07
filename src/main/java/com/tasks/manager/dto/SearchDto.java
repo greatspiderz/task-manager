@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 public class SearchDto {
 
-    TaskStatus status;
+    String status;
     Long taskGroupId;
     String type;
     Integer level;

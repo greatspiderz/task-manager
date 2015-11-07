@@ -83,11 +83,11 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
-    public List<T> findByQuery(final String queryStr)
+    @Transactional
+    public int executeQuery(final String queryStr)
     {
-        Query query = getEntityManager().createQuery(queryStr);
-        final List<T> result = (List<T>) query.getResultList();
-        return result;
+        Query query = getEntityManager().createNativeQuery(queryStr);
+        return query.executeUpdate();
     }
 
     @Override
