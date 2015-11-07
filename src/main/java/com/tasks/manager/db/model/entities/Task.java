@@ -22,7 +22,7 @@ import java.util.List;
 public class Task extends BaseEntity{
 
     @NotNull
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition = "enum('NEW','COMPLETED')")
     private TaskStatus status;
 
     @Embedded
@@ -51,7 +51,7 @@ public class Task extends BaseEntity{
     @JsonProperty(value = "task_attributes")
     private List<TaskAttributes> taskAttributes = new ArrayList<>();
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "task_group_id")
     @JsonProperty(value = "task_group_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")

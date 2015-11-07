@@ -6,6 +6,7 @@ package com.tasks.manager.db.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.model.listeners.BaseEntityListener;
 import com.tasks.manager.util.JodaDateTimeConverter;
 import lombok.Data;

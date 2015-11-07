@@ -14,5 +14,5 @@ public class Subject {
     @Column(name = "subject_type")
     private String type;
     @Column(name = "subject_id")
-    private String id;
+    private long id;
 }

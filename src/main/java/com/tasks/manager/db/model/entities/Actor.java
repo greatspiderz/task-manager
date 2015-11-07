@@ -14,5 +14,5 @@ public class Actor {
     @Column(name = "actor_type")
     private String type;
     @Column(name = "actor_id")
-    private String id;
+    private long id;
 }

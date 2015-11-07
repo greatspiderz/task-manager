@@ -43,6 +43,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public T fetchById(final long id) {
         EntityManager em = getEntityManager();
         T entity = em.find(getEntityClass(), id);
@@ -51,6 +52,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public Class<T> getEntityClass() {
         if (entityClass == null) {
             Type type = getClass().getGenericSuperclass();

@@ -16,11 +16,11 @@ import javax.persistence.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskAttributes extends BaseEntity{
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     @JsonProperty(value = "task_id")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
+//    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+//    @JsonIdentityReference(alwaysAsId = true)
     private Task task;
 
     @Column(name = "key")

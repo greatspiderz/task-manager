@@ -14,7 +14,7 @@ import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.transaction.Transactional;
+import com.google.inject.persist.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

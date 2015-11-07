@@ -1,6 +1,7 @@
 package com.tasks.manager.db.dao.interfaces;
 
 import com.google.inject.ImplementedBy;
+import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.dao.jpa.BaseDaoImpl;
 
 import javax.persistence.EntityManager;
