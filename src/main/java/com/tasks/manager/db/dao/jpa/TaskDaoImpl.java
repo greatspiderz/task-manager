@@ -1,6 +1,8 @@
 package com.tasks.manager.db.dao.jpa;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.tasks.manager.db.dao.interfaces.TaskDao;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.Actor;
 import com.tasks.manager.db.model.entities.Subject;
@@ -12,15 +14,16 @@ import org.hibernate.criterion.Restrictions;
 
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
-public class TaskDao extends BaseDao<Task> {
+public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
 
     @Inject
-    public TaskDao(Provider<EntityManager> entityManagerProvider) {
+    public TaskDaoImpl(Provider<EntityManager> entityManagerProvider) {
         super(entityManagerProvider);
         entityClass = Task.class;
     }
@@ -74,24 +77,24 @@ public class TaskDao extends BaseDao<Task> {
 
     public List<Task> search(SearchDto searchDto)
     {
-        Criterion statusCriterion = Restrictions.eq("status", searchDto.getStatus());
-        Criterion taskGroupIdCriterion = Restrictions.eq("task_group_id", searchDto.getTaskGroupId());
-        Criterion tasktypeCriterion = Restrictions.eq("type", searchDto.getType());
-        Criterion levelCriterion = Restrictions.eq("level", searchDto.getLevel());
-        //TODO :  Ask about column
-        Criterion actorIdCriterion = Restrictions.eq("actor_id", searchDto.getActor().getId());
-        Criterion actorTypeCriterion = Restrictions.eq("actor_type", searchDto.getActor().getType());
-        // TODO:  Ask for Or/And
-        Criterion searchCriterion = Restrictions.or(
-                statusCriterion,
-                taskGroupIdCriterion,
-                tasktypeCriterion,
-                levelCriterion,
-                actorIdCriterion,
-                actorTypeCriterion
-        );
+        StringBuilder queryString = new StringBuilder("select t from Task t");
+        ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
 
-        return findByCriteria(searchCriterion);
+        queryString.append(" where ");
+        List<String> queryParamStringList = new ArrayList<>();
+        if(searchDto.getStatus()!=null)
+        {
+            queryParamStringList.add("t.status = :status");
+            namedParamMapBuilder.put("status", searchDto.getStatus());
+        }
+        ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
+        queryString.append(String.join( " and ", queryParamStringList));
+        List<Task> taskResults = new ArrayList<>();
+        if(namedParamMap.size() > 0) {
+            taskResults = findByQueryAndNamedParams(searchDto.getFirstResult(), searchDto.getMaxResults(),
+                    queryString.toString(), namedParamMap);
+        }
+        return taskResults;
     }
 
     public List<Task> getAll(List<Long> taskIds)

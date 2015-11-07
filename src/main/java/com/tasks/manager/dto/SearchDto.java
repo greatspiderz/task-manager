@@ -15,4 +15,7 @@ public class SearchDto {
     String type;
     Integer level;
     Actor actor;
+    private Integer firstResult;
+    private Integer maxResults;
+
 }

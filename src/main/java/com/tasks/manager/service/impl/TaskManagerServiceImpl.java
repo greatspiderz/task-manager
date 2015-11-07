@@ -3,9 +3,9 @@ package com.tasks.manager.service.impl;
 import com.github.oxo42.stateless4j.StateMachine;
 import com.github.oxo42.stateless4j.StateMachineConfig;
 import com.google.inject.Inject;
-import com.tasks.manager.db.dao.jpa.TaskAttributesDao;
-import com.tasks.manager.db.dao.jpa.TaskDao;
-import com.tasks.manager.db.dao.jpa.TaskGroupDao;
+import com.tasks.manager.db.dao.interfaces.TaskAttributesDao;
+import com.tasks.manager.db.dao.interfaces.TaskDao;
+import com.tasks.manager.db.dao.interfaces.TaskGroupDao;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -26,17 +27,17 @@ import java.util.List;
 public class TaskManagerServiceImpl implements TaskManagerService {
 
     private final TaskDao taskDao;
-    private final TaskGroupDao tgDao;
+    private final TaskGroupDao taskGroupDao;
     private final TaskAttributesDao taskAttributesDao;
     private final StateMachineConfig taskStateMachineConfig;
 
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
-                                  TaskGroupDao tgDao,
+                                  TaskGroupDao taskGroupDao,
                                   TaskAttributesDao taskAttributesDao,
                                   StateMachineProvider stateMachineProvider) {
         this.taskDao = taskDao;
-        this.tgDao = tgDao;
+        this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
         this.taskStateMachineConfig = stateMachineProvider.get();
     }
@@ -44,19 +45,19 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     @Transactional(rollbackOn = Exception.class)
     @Override
     public TaskGroup createTaskGroup(TaskGroup taskgroup) {
-        tgDao.save(taskgroup);
+        taskGroupDao.save(taskgroup);
         return taskgroup;
     }
 
     @Override
     public TaskGroup fetchTaskGroup(long tgId) {
-        return tgDao.fetchById(tgId);
+        return taskGroupDao.fetchById(tgId);
     }
 
     @Transactional(rollbackOn = Exception.class)
     @Override
     public Task createTask(Task task, long tgId) {
-        TaskGroup taskGroup = tgDao.fetchById(tgId);
+        TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         task.setTaskGroup(taskGroup);
         taskDao.save(task);
         return task;
@@ -109,9 +110,9 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public List<Task> findTasksForAttributes(String key, String value) {
+    public List<Task> findTasksForAttributes(HashMap<String, String> attributeNameValue) {
 
-        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(key, value);
+        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeNameValue);
         Iterator<TaskAttributes> iterator = taskAttributes.iterator();
         List<Task> tasks = new ArrayList<>();
         while (iterator.hasNext()) {
