@@ -25,8 +25,8 @@ public class TaskAttributesDaoImpl extends BaseDaoImpl<TaskAttributes> implement
     //TODO : Not sure whether this will be needed.
     public List<TaskAttributes> findTaskAttributes(HashMap<String, String> attibuteNameValue)
     {
-        Criterion keyCriterion = Restrictions.in("key", attibuteNameValue.keySet());
-        Criterion valueCriterion = Restrictions.in("value", attibuteNameValue.values());
+        Criterion keyCriterion = Restrictions.in("attribute_name", attibuteNameValue.keySet());
+        Criterion valueCriterion = Restrictions.in("attribute_value", attibuteNameValue.values());
         Criterion searchCriterion = Restrictions.and(keyCriterion, valueCriterion);
         return findByCriteria(searchCriterion);
     }

@@ -13,7 +13,7 @@ import com.tasks.manager.service.impl.TaskManagerServiceImpl;
 /**
  * Created by shlok.chaurasia on 07/11/15.
  */
-public class BindingClassTestModule extends AbstractModule {
+public class BindingClassForTests extends AbstractModule {
     @Override
     protected void configure() {
         bind(TaskManagerService.class).to(TaskManagerServiceImpl.class);

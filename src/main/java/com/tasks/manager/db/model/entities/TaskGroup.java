@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.inject.persist.Transactional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -13,7 +15,8 @@ import java.util.List;
 /**
  * Created by akshay.kesarwan on 04/11/15.
  */
-@Data
+@Setter
+@Getter
 @Entity
 @Table(name = "task_group")
 @JsonIgnoreProperties(ignoreUnknown = true)

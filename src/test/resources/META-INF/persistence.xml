@@ -16,7 +16,9 @@ http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
             <property name="javax.persistence.jdbc.password" value="" />
             <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver" />
             <property name="hibernate.show_sql" value="true" />
+            <!--<property name="hibernate.SQL" attribute_value="DEBUG" />-->
             <property name="hibernate.format_sql" value="true" />
+            <property name="hibernate.use_sql_comments" value="true" />
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect" />
             <property name="hibernate.hbm2ddl.auto" value="validate" />
             <!-- Configuring Connection Pool -->
@@ -25,6 +27,8 @@ http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
             <property name="hibernate.c3p0.timeout" value="500" />
             <property name="hibernate.c3p0.max_statements" value="50" />
             <property name="hibernate.c3p0.idle_test_period" value="2000" />
+            <property name="hibernate.enable_lazy_load_no_trans" value = "true"/>
+            <!--<property name="hibernate.hbm2ddl.auto" attribute_value="create" />-->
         </properties>
 
     </persistence-unit>

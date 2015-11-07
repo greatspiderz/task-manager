@@ -4,6 +4,7 @@
 *.iml
 *.iws
 *.idea
+test-*.log*
 spider.log
 **/build/*
 .gradle/*

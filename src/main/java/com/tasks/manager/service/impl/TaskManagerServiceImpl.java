@@ -94,7 +94,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         log.info("updating status of task " + task.getId() + " with trigger " + newStatus);
         StateMachine<TaskStatus, TaskStatus> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
         stateMachine.fire(newStatus);
-        task.setStatus(newStatus);
+        task.setStatus(newStatus.name());
     }
 
     @Transactional(rollbackOn = Exception.class)
