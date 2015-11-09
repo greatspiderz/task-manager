@@ -26,8 +26,9 @@ import java.util.List;
 public class Task extends BaseEntity{
 
     @NotNull
-    @Column(name = "status", columnDefinition = "enum('NEW','IN_PROGRESS','CANCELLED','COMPLETED')")
-    private String status;
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status = TaskStatus.NEW;
 
     @Embedded
     private Actor actor;

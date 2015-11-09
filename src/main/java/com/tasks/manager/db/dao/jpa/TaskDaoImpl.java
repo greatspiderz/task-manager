@@ -68,7 +68,7 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         Task task = fetchById(id);
         if(task != null)
         {
-            task.setStatus(taskStatus.name());
+            task.setStatus(taskStatus);
             this.save(task);
             return;
         }

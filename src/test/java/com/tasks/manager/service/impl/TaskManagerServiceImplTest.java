@@ -29,7 +29,7 @@ import java.util.List;
 public class TaskManagerServiceImplTest {
     TaskManagerServiceImpl taskManagerService;
     DateTime defaultDateTime;
-    String defaultTaskStatus;
+    TaskStatus defaultTaskStatus;
     String defaultTaskType;
     String defaultAttributeName;
     String defaultAttributeValue;
@@ -44,7 +44,7 @@ public class TaskManagerServiceImplTest {
         emptyDatabases();
         taskManagerService = injector.getInstance(TaskManagerServiceImpl.class);
         defaultDateTime = DateTime.parse("2015-10-09");
-        defaultTaskStatus = TaskStatus.NEW.name();
+        defaultTaskStatus = TaskStatus.NEW;
         defaultTaskType = "PICK";
         defaultAttributeName = "test_attribute";
         defaultAttributeValue = "test_value";
@@ -178,7 +178,7 @@ public class TaskManagerServiceImplTest {
         assertEquals(task.getType(), searchedTask.getType());
     }
 
-    private long createTestTaskGroupWithTask(String attributeName, String attributeValue, String status, String type)
+    private long createTestTaskGroupWithTask(String attributeName, String attributeValue, TaskStatus status, String type)
     {
         TaskAttributes ta = new TaskAttributes();
         ta.setAttribute_name(attributeName);
