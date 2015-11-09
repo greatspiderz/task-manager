@@ -3,11 +3,11 @@ version = '0.0.1-SNAPSHOT'
 // This is root project gradle file, it has no code only sub projects, sub projects have java code.
 apply plugin: 'java'
 apply plugin: 'idea'
-
+apply plugin: 'maven'
 allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
-
+    group = 'com.fquick'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -32,9 +32,15 @@ allprojects {
         compile group: 'com.google.inject.extensions', name: 'guice-persist', version: '4.0'
         compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.0'
         compile group: 'com.github.oxo42', name: 'stateless4j', version:'2.5.0'
-        compile 'org.slf4j:slf4j-log4j12:1.6.1'
         testCompile "junit:junit:4.11"
 
+    }
+
+    uploadArchives {
+        repositories.mavenDeployer {
+            repository(url: 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-releases-local/')
+            snapshotRepository(url: 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshots-local/')
+        }
     }
 
 
@@ -48,5 +54,5 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'task-manager'
-    version = '0.0.1-SNAPSHOT'
+    version = '0.0.2-SNAPSHOT'
 }
