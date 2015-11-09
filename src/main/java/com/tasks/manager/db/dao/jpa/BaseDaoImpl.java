@@ -43,6 +43,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public T fetchById(final long id) {
         EntityManager em = getEntityManager();
         T entity = em.find(getEntityClass(), id);
@@ -51,6 +52,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public Class<T> getEntityClass() {
         if (entityClass == null) {
             Type type = getClass().getGenericSuperclass();
@@ -81,11 +83,11 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
-    public List<T> findByQuery(final String queryStr)
+    @Transactional
+    public int executeQuery(final String queryStr)
     {
-        Query query = getEntityManager().createQuery(queryStr);
-        final List<T> result = (List<T>) query.getResultList();
-        return result;
+        Query query = getEntityManager().createNativeQuery(queryStr);
+        return query.executeUpdate();
     }
 
     @Override

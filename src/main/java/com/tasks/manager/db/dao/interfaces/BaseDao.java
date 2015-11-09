@@ -1,6 +1,7 @@
 package com.tasks.manager.db.dao.interfaces;
 
 import com.google.inject.ImplementedBy;
+import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.dao.jpa.BaseDaoImpl;
 
 import javax.persistence.EntityManager;
@@ -21,7 +22,7 @@ public interface BaseDao<T> {
     Class<T> getEntityClass();
 
     EntityManager getEntityManager();
-    List<T> findByQuery(final String queryStr);
+    int executeQuery(final String queryStr);
     List<T> findByQueryAndNamedParams(final Integer firstResult, final Integer maxResults,
                                       @NotNull final String queryStr, @NotNull final Map<String, ?> params);
 }

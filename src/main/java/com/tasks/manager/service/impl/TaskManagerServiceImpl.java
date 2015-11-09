@@ -14,7 +14,7 @@ import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.transaction.Transactional;
+import com.google.inject.persist.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -94,7 +94,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         log.info("updating status of task " + task.getId() + " with trigger " + newStatus);
         StateMachine<TaskStatus, TaskStatus> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
         stateMachine.fire(newStatus);
-        task.setStatus(newStatus);
+        task.setStatus(newStatus.name());
     }
 
     @Transactional(rollbackOn = Exception.class)

@@ -32,6 +32,8 @@ allprojects {
         compile group: 'com.google.inject.extensions', name: 'guice-persist', version: '4.0'
         compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.0'
         compile group: 'com.github.oxo42', name: 'stateless4j', version:'2.5.0'
+        compile 'org.slf4j:slf4j-log4j12:1.6.1'
+        testCompile "junit:junit:4.11"
 
     }
 
