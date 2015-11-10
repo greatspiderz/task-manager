@@ -15,14 +15,12 @@ import java.util.List;
 /**
  * Created by akshay.kesarwan on 04/11/15.
  */
-@Setter
-@Getter
+@Data
 @Entity
 @Table(name = "task_group")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(callSuper=true)
 public class TaskGroup extends BaseEntity{
     @OneToMany(mappedBy = "taskGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonProperty(value = "tasks")
+    @JsonProperty(value = "task")
     private List<Task> tasks = new ArrayList<>();
 }

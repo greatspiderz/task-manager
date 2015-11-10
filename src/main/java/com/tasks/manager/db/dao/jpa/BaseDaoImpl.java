@@ -3,6 +3,7 @@ package com.tasks.manager.db.dao.jpa;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.dao.interfaces.BaseDao;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
@@ -15,10 +16,12 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import com.tasks.manager.db.model.entities.*;
 
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
+@Slf4j
 public class BaseDaoImpl<T> implements BaseDao<T> {
 
     private final Provider<EntityManager> entityManagerProvider;
@@ -30,7 +33,6 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
-    @Transactional
     public void save(T entity) {
         EntityManager em = getEntityManager();
         if (em.contains(entity) ) {
@@ -43,7 +45,6 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
-    @Transactional
     public T fetchById(final long id) {
         EntityManager em = getEntityManager();
         T entity = em.find(getEntityClass(), id);
@@ -52,10 +53,10 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
-    @Transactional
     public Class<T> getEntityClass() {
         if (entityClass == null) {
             Type type = getClass().getGenericSuperclass();
+            log.info(type.toString() + "---- Type -----" + ParameterizedType.class);
             if (type instanceof ParameterizedType) {
                 ParameterizedType paramType = (ParameterizedType) type;
                 entityClass = (Class<T>) paramType.getActualTypeArguments()[0];
@@ -83,7 +84,6 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
-    @Transactional
     public int executeQuery(final String queryStr)
     {
         Query query = getEntityManager().createNativeQuery(queryStr);

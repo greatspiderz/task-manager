@@ -1,4 +1,4 @@
-version = '0.0.1-SNAPSHOT'
+version = '0.0.5-SNAPSHOT'
 
 // This is root project gradle file, it has no code only sub projects, sub projects have java code.
 apply plugin: 'java'
@@ -29,11 +29,21 @@ allprojects {
         compile group: 'org.hibernate', name: 'hibernate-core', version: '4.3.11.Final'
         compile group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.0.Final'
         compile group: 'javax.inject', name: 'javax.inject', version: '1'
-        compile group: 'com.google.inject.extensions', name: 'guice-persist', version: '4.0'
-        compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '4.0'
+        compile group: 'com.google.inject.extensions', name: 'guice-persist', version: '3.0'
+        compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '3.0'
+        compile 'com.google.guava:guava:15.0'
         compile group: 'com.github.oxo42', name: 'stateless4j', version:'2.5.0'
         testCompile "junit:junit:4.11"
 
+    }
+
+    task sourceJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives sourceJar
     }
 
     uploadArchives {
@@ -54,5 +64,5 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'task-manager'
-    version = '0.0.2-SNAPSHOT'
+    version = '0.0.5-SNAPSHOT'
 }

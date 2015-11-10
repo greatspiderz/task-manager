@@ -17,8 +17,7 @@ import java.util.List;
 /**
  * Created by akshay.kesarwan on 27/10/15.
  */
-@Setter
-@Getter
+@Data
 @Entity
 @Table(name = "task")
 @JsonIgnoreProperties(ignoreUnknown = true)

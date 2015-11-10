@@ -12,8 +12,7 @@ import javax.persistence.Embeddable;
  * Created by akshay.kesarwan on 27/10/15.
  */
 @Embeddable
-@Setter
-@Getter
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Actor {
     @Column(name = "actor_type")

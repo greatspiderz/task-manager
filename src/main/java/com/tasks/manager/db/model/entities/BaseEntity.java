@@ -19,8 +19,7 @@ import org.joda.time.DateTime;
 import javax.persistence.*;
 import java.io.Serializable;
 
-@Setter
-@Getter
+@Data
 @MappedSuperclass
 @EntityListeners(BaseEntityListener.class)
 @EqualsAndHashCode(of = {"id"})

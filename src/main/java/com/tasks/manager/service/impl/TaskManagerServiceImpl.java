@@ -5,6 +5,7 @@ import com.github.oxo42.stateless4j.StateMachineConfig;
 import com.google.inject.Inject;
 import com.tasks.manager.db.dao.interfaces.TaskAttributesDao;
 import com.tasks.manager.db.dao.interfaces.TaskDao;
+
 import com.tasks.manager.db.dao.interfaces.TaskGroupDao;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
@@ -42,7 +43,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         this.taskStateMachineConfig = stateMachineProvider.get();
     }
 
-    @Transactional(rollbackOn = Exception.class)
     @Override
     public TaskGroup createTaskGroup(TaskGroup taskgroup) {
         taskGroupDao.save(taskgroup);
@@ -54,7 +54,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskGroupDao.fetchById(tgId);
     }
 
-    @Transactional(rollbackOn = Exception.class)
     @Override
     public Task createTask(Task task, long tgId) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
@@ -68,20 +67,17 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.fetchById(taskId);
     }
 
-    @Transactional(rollbackOn = Exception.class)
     @Override
     public void updateActor(long taskId, Actor actor) throws TaskNotFoundException {
         taskDao.updateActor(taskId,actor);
 
     }
 
-    @Transactional(rollbackOn = Exception.class)
     @Override
     public void updateSubject(long taskId, Subject subject) throws TaskNotFoundException {
         taskDao.updateSubject(taskId, subject);
     }
 
-    @Transactional(rollbackOn = Exception.class)
     @Override
     public void updateStatus(long taskId, TaskStatus newStatus) throws TaskNotFoundException {
         Task task = fetchTask(taskId);
@@ -96,8 +92,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         stateMachine.fire(newStatus);
         task.setStatus(newStatus);
     }
-
-    @Transactional(rollbackOn = Exception.class)
+    
     @Override
     public void updateETA(long taskId, long eta) throws TaskNotFoundException{
         taskDao.updateETA(taskId, eta);

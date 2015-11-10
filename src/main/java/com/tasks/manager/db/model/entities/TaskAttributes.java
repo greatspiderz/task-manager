@@ -12,8 +12,7 @@ import javax.persistence.*;
  * Created by akshay.kesarwan on 04/11/15.
  */
 @Entity
-@Setter
-@Getter
+@Data
 @Table(name = "task_attributes")
 @EqualsAndHashCode(callSuper=false, exclude = {"task"})
 @JsonIgnoreProperties(ignoreUnknown = true)
