@@ -84,6 +84,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public int executeQuery(final String queryStr)
     {
         Query query = getEntityManager().createNativeQuery(queryStr);

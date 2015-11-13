@@ -8,6 +8,7 @@ http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
         <class>com.tasks.manager.db.model.entities.TaskGroup</class>
         <class>com.tasks.manager.db.model.entities.Task</class>
         <class>com.tasks.manager.db.model.entities.TaskAttributes</class>
+        <class>com.tasks.manager.db.model.entities.Relation</class>
         <class>com.tasks.manager.db.model.entities.Actor</class>
         <class>com.tasks.manager.db.model.entities.Subject</class>
         <properties>

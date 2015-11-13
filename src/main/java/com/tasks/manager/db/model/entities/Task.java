@@ -64,4 +64,7 @@ public class Task extends BaseEntity{
     @JsonIdentityReference(alwaysAsId = true)
     private TaskGroup taskGroup;
 
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonProperty(value = "relation")
+    private List<Relation> relations;
 }

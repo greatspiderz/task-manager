@@ -58,6 +58,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public Task createTask(Task task, long tgId) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         task.setTaskGroup(taskGroup);
+        if(taskGroup.getTasks().size() == 0)
+        {
+            taskGroup.setTasks(new ArrayList<>());
+        }
+        taskGroup.getTasks().add(task);
         taskDao.save(task);
         return task;
     }
@@ -92,7 +97,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         stateMachine.fire(newStatus);
         task.setStatus(newStatus);
     }
-    
+
     @Override
     public void updateETA(long taskId, long eta) throws TaskNotFoundException{
         taskDao.updateETA(taskId, eta);
@@ -115,5 +120,16 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             tasks.add(taskAttribute.getTask());
         }
         return tasks;
+    }
+
+    public List<Task> fetchParentTasks(long taskId){
+        Task task = fetchTask(taskId);
+        List<Relation> relations = task.getRelations();
+        List<Long> taskIds = new ArrayList<>();
+        for(Relation relation : relations)
+        {
+            taskIds.add(relation.getParentTaskId());
+        }
+        return taskDao.getAll(taskIds);
     }
 }

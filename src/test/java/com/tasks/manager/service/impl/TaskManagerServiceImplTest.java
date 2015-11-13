@@ -7,17 +7,17 @@ import com.google.inject.persist.Transactional;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.tasks.manager.BindingClassForTests;
 import com.tasks.manager.db.dao.jpa.BaseDaoImpl;
-import com.tasks.manager.db.dao.jpa.TaskDaoImpl;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import org.joda.time.DateTime;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +25,6 @@ import java.util.List;
 /**
  * Created by shlok.chaurasia on 06/11/15.
  */
-@Transactional
 public class TaskManagerServiceImplTest {
     TaskManagerServiceImpl taskManagerService;
     DateTime defaultDateTime;
@@ -35,12 +34,15 @@ public class TaskManagerServiceImplTest {
     String defaultAttributeValue;
     PersistService persistService;
     Injector injector;
+    BaseDaoImpl transaction;
+
     @Before
     public void setUp(){
         injector = Guice.createInjector(new BindingClassForTests(), new JpaPersistModule("test"));
-
         persistService = injector.getInstance(PersistService.class);
         persistService.start();
+        transaction = injector.getInstance(BaseDaoImpl.class);
+        transaction.getEntityManager().getTransaction().begin();
         emptyDatabases();
         taskManagerService = injector.getInstance(TaskManagerServiceImpl.class);
         defaultDateTime = DateTime.parse("2015-10-09");
@@ -67,6 +69,7 @@ public class TaskManagerServiceImplTest {
         TaskAttributes taskAttribute = taskAttributeList.get(0);
         assertEquals(taskAttribute.getAttribute_name(), defaultAttributeName);
         assertEquals(taskAttribute.getAttribute_value(), defaultAttributeValue);
+
     }
 
     @Test
@@ -178,6 +181,51 @@ public class TaskManagerServiceImplTest {
         assertEquals(task.getType(), searchedTask.getType());
     }
 
+    @Test
+    public void testCreateTask(){
+        TaskGroup taskGroup = new TaskGroup();
+        taskGroup = taskManagerService.createTaskGroup(taskGroup);
+        Task task = new Task();
+        task.setType("HAND_SHAKE");
+        task.setTaskGroup(taskGroup);
+        taskManagerService.createTask(task, taskGroup.getId());
+        TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
+        assertEquals(1, updatedTaskGroup.getTasks().size());
+        assertEquals(updatedTaskGroup.getTasks().get(0).getType(),"HAND_SHAKE");
+    }
+
+    @Test
+    public void testFetchParentTask(){
+        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+        Task parentTask = taskGroup.getTasks().get(0);
+        Task task = new Task();
+        task.setType("HAND_SHAKE");
+        task.setStatus(TaskStatus.CANCELLED);
+        Relation relation = new Relation();
+        relation.setParentTaskId(parentTask.getId());
+        List<Relation> relations = new ArrayList<>();
+        relations.add(relation);
+        task.setRelations(relations);
+        taskManagerService.createTask(task, createdTaskGroupId);
+        TaskGroup updatedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+        Task travelTask = null;
+        System.out.print(updatedTaskGroup.getTasks().get(1).getType());
+        for(Task travel : updatedTaskGroup.getTasks())
+        {
+            if(travel.getType() == "HAND_SHAKE")
+            {
+                travelTask = travel;
+                break;
+            }
+        }
+
+        List<Task> createdParentTask = taskManagerService.fetchParentTasks(travelTask.getId());
+        assertEquals(createdParentTask.size(), 1);
+        assertEquals(createdParentTask.get(0).getType(), "PICK");
+    }
+
     private long createTestTaskGroupWithTask(String attributeName, String attributeValue, TaskStatus status, String type)
     {
         TaskAttributes ta = new TaskAttributes();
@@ -195,6 +243,10 @@ public class TaskManagerServiceImplTest {
         taskGrp.setTasks(new ArrayList<>(Arrays.asList(task)));
         TaskGroup tskGrpCreated = taskManagerService.createTaskGroup(taskGrp);
         return tskGrpCreated.getId();
+    }
+    @After
+    public void tearDown(){
+        transaction.getEntityManager().getTransaction().commit();
     }
 
     private void emptyDatabases(){
