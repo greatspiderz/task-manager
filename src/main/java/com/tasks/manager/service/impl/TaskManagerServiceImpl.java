@@ -61,6 +61,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public Task createTask(Task task, long tgId) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         Relation relation = new Relation();
+
         taskDao.save(task);
         relation.setTaskGroup(taskGroup);
         relation.setTask(task);
@@ -127,7 +128,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Override
     public List<Task> findTasksInTaskGroup(SearchDto searchdto, Long taskGroupId) {
-        List<Relation> relations = relationDao.fetchByTaskGroupId(taskGroupId);
+        List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
         List<Long> taskIds = new ArrayList<>();
         for (Relation relation: relations) {
             taskIds.add(relation.getTask().getId());
@@ -150,7 +151,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     public List<Task> fetchParentTasks(long taskId){
-        List<Relation> relations = relationDao.fetchByTaskId(taskId);
+        List<Relation> relations = taskDao.fetchById(taskId).getRelations();
         List<Long> parentIds = new ArrayList<>();
         for (Relation relation : relations) {
             parentIds.add(relation.getParentTaskId());

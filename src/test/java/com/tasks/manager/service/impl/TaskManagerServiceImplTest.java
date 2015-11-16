@@ -251,7 +251,7 @@ public class TaskManagerServiceImplTest {
         ta.setTask(task);
         TaskGroup taskGrp = new TaskGroup();
         TaskGroup tskGrpCreated = taskManagerService.createTaskGroup(taskGrp);
-        taskManagerService.createTask(task, tskGrpCreated.getId());
+        taskManagerService.createTask(task,tskGrpCreated.getId());
         return tskGrpCreated.getId();
     }
     @After
