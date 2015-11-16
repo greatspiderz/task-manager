@@ -11,7 +11,6 @@ import lombok.Data;
 public class SearchDto {
 
     TaskStatus status;
-    Long taskGroupId;
     String type;
     Integer level;
     Actor actor;

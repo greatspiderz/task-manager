@@ -58,8 +58,8 @@ public class TaskManagerServiceImplTest {
                 defaultTaskStatus, defaultTaskType);
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
         assertNotNull(fetchedTaskGroup);
-        assertEquals(createdTaskGroupId, (long)fetchedTaskGroup.getId());
-        List<Task> taskList =  fetchedTaskGroup.getTasks();
+        assertEquals(createdTaskGroupId, (long) fetchedTaskGroup.getId());
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(fetchedTaskGroup.getId());
         assertEquals(1, taskList.size());
         Task task = taskList.get(0);
         assertEquals(task.getStatus(), defaultTaskStatus);
@@ -82,7 +82,8 @@ public class TaskManagerServiceImplTest {
         actor.setId(actorId);
         actor.setType(actorType);
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        Task task = taskManagerService.fetchTask(fetchedTaskGroup.getTasks().get(0).getId());
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(fetchedTaskGroup.getId());
+        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         try{
             taskManagerService.updateActor(task.getId(), actor);
         }
@@ -104,7 +105,8 @@ public class TaskManagerServiceImplTest {
         subject.setId(subjectId);
         subject.setType(subjectType);
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        Task task = taskManagerService.fetchTask(fetchedTaskGroup.getTasks().get(0).getId());
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(fetchedTaskGroup.getId());
+        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         try{
             taskManagerService.updateSubject(task.getId(), subject);
         }
@@ -122,7 +124,8 @@ public class TaskManagerServiceImplTest {
                 defaultTaskStatus, defaultTaskType);
         TaskStatus newStatus = TaskStatus.IN_PROGRESS;
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        Task task = taskManagerService.fetchTask(fetchedTaskGroup.getTasks().get(0).getId());
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(fetchedTaskGroup.getId());
+        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         try{
             taskManagerService.updateStatus(task.getId(), newStatus);
         }
@@ -139,7 +142,8 @@ public class TaskManagerServiceImplTest {
                 defaultTaskStatus, defaultTaskType);
         long eta = 125;
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        Task task = taskManagerService.fetchTask(fetchedTaskGroup.getTasks().get(0).getId());
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(fetchedTaskGroup.getId());
+        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         try{
             taskManagerService.updateETA(task.getId(), eta);
         }
@@ -170,7 +174,8 @@ public class TaskManagerServiceImplTest {
                 defaultTaskStatus, "TRAVEL");
 
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        Task task = taskManagerService.fetchTask(fetchedTaskGroup.getTasks().get(0).getId());
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(fetchedTaskGroup.getId());
+        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         SearchDto searchDto = new SearchDto();
         searchDto.setType(task.getType());
         searchDto.setStatus(task.getStatus());
@@ -187,11 +192,11 @@ public class TaskManagerServiceImplTest {
         taskGroup = taskManagerService.createTaskGroup(taskGroup);
         Task task = new Task();
         task.setType("HAND_SHAKE");
-        task.setTaskGroup(taskGroup);
         taskManagerService.createTask(task, taskGroup.getId());
         TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
-        assertEquals(1, updatedTaskGroup.getTasks().size());
-        assertEquals(updatedTaskGroup.getTasks().get(0).getType(),"HAND_SHAKE");
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(updatedTaskGroup.getId());
+        assertEquals(1, taskList.size());
+        assertEquals(taskList.get(0).getType(),"HAND_SHAKE");
     }
 
     @Test
@@ -199,7 +204,8 @@ public class TaskManagerServiceImplTest {
         long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
         TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        Task parentTask = taskGroup.getTasks().get(0);
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(taskGroup.getId());
+        Task parentTask = taskList.get(0);
         Task task = new Task();
         task.setType("HAND_SHAKE");
         task.setStatus(TaskStatus.CANCELLED);
@@ -210,9 +216,10 @@ public class TaskManagerServiceImplTest {
         task.setRelations(relations);
         taskManagerService.createTask(task, createdTaskGroupId);
         TaskGroup updatedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+        List<Task> updatedTaskList = taskManagerService.findTasksInTaskGroup(taskGroup.getId());
         Task travelTask = null;
-        System.out.print(updatedTaskGroup.getTasks().get(1).getType());
-        for(Task travel : updatedTaskGroup.getTasks())
+        System.out.print(updatedTaskList.get(1).getType());
+        for(Task travel : updatedTaskList)
         {
             if(travel.getType() == "HAND_SHAKE")
             {
@@ -239,9 +246,8 @@ public class TaskManagerServiceImplTest {
         task.setTaskAttributes(new ArrayList<>(Arrays.asList(ta)));
         ta.setTask(task);
         TaskGroup taskGrp = new TaskGroup();
-        task.setTaskGroup(taskGrp);
-        taskGrp.setTasks(new ArrayList<>(Arrays.asList(task)));
         TaskGroup tskGrpCreated = taskManagerService.createTaskGroup(taskGrp);
+        taskManagerService.createTask(task,tskGrpCreated.getId());
         return tskGrpCreated.getId();
     }
     @After
@@ -251,9 +257,11 @@ public class TaskManagerServiceImplTest {
 
     private void emptyDatabases(){
         BaseDaoImpl baseDaoImpl = injector.getInstance(BaseDaoImpl.class);
+        baseDaoImpl.executeQuery("Delete from relation");
+        baseDaoImpl.executeQuery("Delete from task_attributes");
         baseDaoImpl.executeQuery("Delete from task");
         baseDaoImpl.executeQuery("Delete from task_group");
-        baseDaoImpl.executeQuery("Delete from task_attributes");
+
     }
 
 }

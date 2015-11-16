@@ -93,11 +93,6 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
             queryParamStringList.add("t.type = :type");
             namedParamMapBuilder.put("type", searchDto.getType());
         }
-        if(searchDto.getTaskGroupId()!=null)
-        {
-            queryParamStringList.add("t.task_group_id = :task_group_id");
-            namedParamMapBuilder.put("task_group_id", searchDto.getTaskGroupId());
-        }
 
         if(searchDto.getActor()!=null)
         {

@@ -88,6 +88,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     public int executeQuery(final String queryStr)
     {
         Query query = getEntityManager().createNativeQuery(queryStr);
+
         return query.executeUpdate();
     }
 
