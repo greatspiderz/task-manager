@@ -3,6 +3,7 @@ package com.tasks.manager.service.impl;
 import com.github.oxo42.stateless4j.StateMachine;
 import com.github.oxo42.stateless4j.StateMachineConfig;
 import com.google.inject.Inject;
+import com.tasks.manager.db.dao.interfaces.RelationDao;
 import com.tasks.manager.db.dao.interfaces.TaskAttributesDao;
 import com.tasks.manager.db.dao.interfaces.TaskDao;
 
@@ -30,16 +31,18 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final TaskDao taskDao;
     private final TaskGroupDao taskGroupDao;
     private final TaskAttributesDao taskAttributesDao;
+    private final RelationDao relationDao;
     private final StateMachineConfig taskStateMachineConfig;
 
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
                                   TaskGroupDao taskGroupDao,
                                   TaskAttributesDao taskAttributesDao,
-                                  StateMachineProvider stateMachineProvider) {
+                                  StateMachineProvider stateMachineProvider, RelationDao relationDao) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
+        this.relationDao = relationDao;
         this.taskStateMachineConfig = stateMachineProvider.get();
     }
 
@@ -57,13 +60,17 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     @Override
     public Task createTask(Task task, long tgId) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
-        task.setTaskGroup(taskGroup);
-        if(taskGroup.getTasks().size() == 0)
-        {
-            taskGroup.setTasks(new ArrayList<>());
-        }
-        taskGroup.getTasks().add(task);
+        Relation relation = new Relation();
         taskDao.save(task);
+        relation.setTaskGroup(taskGroup);
+        relation.setTask(task);
+        if(task.getRelations()==null)
+            task.setRelations(new ArrayList<>());
+        if(taskGroup.getRelations()==null)
+            taskGroup.setRelations(new ArrayList<>());
+        task.getRelations().add(relation);
+        taskGroup.getRelations().add(relation);
+        relationDao.save(relation);
         return task;
     }
 
@@ -109,6 +116,26 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.search(searchdto);
     }
 
+    public List<Task> findTasksInTaskGroup(Long taskGroupId) {
+        List<Task> tasks = new ArrayList<>();
+        List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
+        for (Relation relation: relations) {
+            tasks.add(relation.getTask());
+        }
+        return tasks;
+    }
+
+    @Override
+    public List<Task> findTasksInTaskGroup(SearchDto searchdto, Long taskGroupId) {
+        List<Relation> relations = relationDao.fetchByTaskGroupId(taskGroupId);
+        List<Long> taskIds = new ArrayList<>();
+        for (Relation relation: relations) {
+            taskIds.add(relation.getTask().getId());
+        }
+
+        return taskDao.getAll(taskIds);
+    }
+
     @Override
     public List<Task> findTasksForAttributes(HashMap<String, String> attributeNameValue) {
 
@@ -123,13 +150,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     public List<Task> fetchParentTasks(long taskId){
-        Task task = fetchTask(taskId);
-        List<Relation> relations = task.getRelations();
-        List<Long> taskIds = new ArrayList<>();
-        for(Relation relation : relations)
-        {
-            taskIds.add(relation.getParentTaskId());
+        List<Relation> relations = relationDao.fetchByTaskId(taskId);
+        List<Long> parentIds = new ArrayList<>();
+        for (Relation relation : relations) {
+            parentIds.add(relation.getParentTaskId());
         }
-        return taskDao.getAll(taskIds);
+        return taskDao.getAll(parentIds);
     }
 }

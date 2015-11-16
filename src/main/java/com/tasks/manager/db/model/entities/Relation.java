@@ -18,6 +18,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper=true)
 public class Relation extends BaseEntity {
 
+    @NotNull
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "task_group_id")
     @JsonProperty(value = "task_group_id")
@@ -25,6 +26,7 @@ public class Relation extends BaseEntity {
     @JsonIdentityReference(alwaysAsId = true)
     private TaskGroup taskGroup;
 
+    @NotNull
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     @JsonProperty(value = "task_id")

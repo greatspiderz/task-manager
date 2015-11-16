@@ -57,13 +57,6 @@ public class Task extends BaseEntity{
     @JsonProperty(value = "task_attributes")
     private List<TaskAttributes> taskAttributes = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "task_group_id")
-    @JsonProperty(value = "task_group_id")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-    @JsonIdentityReference(alwaysAsId = true)
-    private TaskGroup taskGroup;
-
     @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "relation")
     private List<Relation> relations;

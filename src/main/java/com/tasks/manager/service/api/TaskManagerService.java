@@ -40,6 +40,8 @@ public interface TaskManagerService {
 
     List<Task> findTasksForAttributes(HashMap<String, String> attibuteNameValue);
 
+    List<Task> findTasksInTaskGroup(SearchDto searchdto, Long taskGroupId);
+
 
 
 }
