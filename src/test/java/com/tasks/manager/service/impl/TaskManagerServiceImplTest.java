@@ -11,16 +11,17 @@ import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
+import com.tasks.manager.dto.TaskGraphEdge;
+import org.jgrapht.graph.DefaultEdge;
 import org.joda.time.DateTime;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by shlok.chaurasia on 06/11/15.
@@ -236,6 +237,78 @@ public class TaskManagerServiceImplTest {
         assertEquals(createdParentTask.size(), 1);
         assertEquals(createdParentTask.get(0).getType(), "PICK");
     }
+    @Test
+    public void testFetchTaskGraphStraightFlow()
+    {
+        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+        List<Task> taskList = taskManagerService.findTasksInTaskGroup(taskGroup.getId());
+
+        Task parentTask = taskList.get(0);
+
+        Task handShakeTask = new Task();
+        handShakeTask.setType("HAND_SHAKE");
+        handShakeTask.setStatus(TaskStatus.NEW);
+        List<Long> parentIds = new ArrayList<>();
+        parentIds.add(parentTask.getId());
+        taskManagerService.createTaskWithParentTasks(handShakeTask, createdTaskGroupId, parentIds);
+
+
+
+        Task travelTask1 = new Task();
+        travelTask1.setType("TRAVEL");
+        travelTask1.setStatus(TaskStatus.NEW);
+        parentIds = new ArrayList<>();
+        parentIds.add(handShakeTask.getId());
+        taskManagerService.createTaskWithParentTasks(travelTask1, createdTaskGroupId, parentIds);
+
+
+        Task travelTask2 = new Task();
+        travelTask2.setType("TRAVEL");
+        travelTask2.setStatus(TaskStatus.NEW);
+        parentIds = new ArrayList<>();
+        parentIds.add(handShakeTask.getId());
+        taskManagerService.createTaskWithParentTasks(travelTask2, createdTaskGroupId, parentIds);
+
+
+        Task deliver = new Task();
+        deliver.setType("DELIVER");
+        deliver.setStatus(TaskStatus.NEW);
+        parentIds = new ArrayList<>();
+        parentIds.add(travelTask1.getId());
+        parentIds.add(travelTask2.getId());
+        taskManagerService.createTaskWithParentTasks(deliver, createdTaskGroupId, parentIds);
+
+        Set<TaskGraphEdge> deliverIncomingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).incomingEdgesOf(deliver);
+        Set<TaskGraphEdge> handShakeOutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(handShakeTask);
+        Set<TaskGraphEdge> parentOutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(parentTask);
+        Set<TaskGraphEdge> travel1OutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(travelTask1);
+        Set<TaskGraphEdge> travel2OutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(travelTask2);
+
+        Assert.assertEquals(2, deliverIncomingEdges.size());
+        Assert.assertEquals(2, handShakeOutgoingEdges.size());
+        Assert.assertEquals(1, parentOutgoingEdges.size());
+        Assert.assertEquals(1, travel1OutgoingEdges.size());
+        Assert.assertEquals(1, travel2OutgoingEdges.size());
+
+        for(TaskGraphEdge edge: parentOutgoingEdges) {
+            Assert.assertEquals(handShakeTask.getType(), edge.getTarget().getType());
+            Assert.assertEquals(handShakeTask.getId(), edge.getTarget().getId());
+        }
+
+        for(TaskGraphEdge edge: travel2OutgoingEdges) {
+            Assert.assertEquals(deliver.getType(), edge.getTarget().getType());
+            Assert.assertEquals(deliver.getId(), edge.getTarget().getId());
+        }
+
+        for(TaskGraphEdge edge: travel1OutgoingEdges) {
+            Assert.assertEquals(deliver.getType(), edge.getTarget().getType());
+            Assert.assertEquals(deliver.getId(), edge.getTarget().getId());
+        }
+
+
+    }
 
     private long createTestTaskGroupWithTask(String attributeName, String attributeValue, TaskStatus status, String type)
     {
@@ -254,6 +327,7 @@ public class TaskManagerServiceImplTest {
         taskManagerService.createTask(task,tskGrpCreated.getId());
         return tskGrpCreated.getId();
     }
+
     @After
     public void tearDown(){
         transaction.getEntityManager().getTransaction().commit();

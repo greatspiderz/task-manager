@@ -12,15 +12,21 @@ import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
+import com.tasks.manager.dto.TaskGraphEdge;
 import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import com.google.inject.persist.Transactional;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+
 
 /**
  * Created by divya.rai on 05/11/15.
@@ -61,17 +67,36 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public Task createTask(Task task, long tgId) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         Relation relation = new Relation();
-
         taskDao.save(task);
         relation.setTaskGroup(taskGroup);
         relation.setTask(task);
-        if(task.getRelations()==null)
+        if (task.getRelations() == null)
             task.setRelations(new ArrayList<>());
-        if(taskGroup.getRelations()==null)
+        if (taskGroup.getRelations() == null)
             taskGroup.setRelations(new ArrayList<>());
         task.getRelations().add(relation);
         taskGroup.getRelations().add(relation);
         relationDao.save(relation);
+        return task;
+    }
+
+    @Override
+    public Task createTaskWithParentTasks(Task task, long tgId, List<Long> parentTaskIds) {
+        TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
+        taskDao.save(task);
+        for (Long parentTaskId : parentTaskIds) {
+            Relation relation = new Relation();
+            relation.setTaskGroup(taskGroup);
+            relation.setTask(task);
+            relation.setParentTaskId(parentTaskId);
+            if (task.getRelations() == null)
+                task.setRelations(new ArrayList<>());
+            if (taskGroup.getRelations() == null)
+                taskGroup.setRelations(new ArrayList<>());
+            task.getRelations().add(relation);
+            taskGroup.getRelations().add(relation);
+            relationDao.save(relation);
+        }
         return task;
     }
 
@@ -82,7 +107,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Override
     public void updateActor(long taskId, Actor actor) throws TaskNotFoundException {
-        taskDao.updateActor(taskId,actor);
+        taskDao.updateActor(taskId, actor);
 
     }
 
@@ -107,7 +132,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateETA(long taskId, long eta) throws TaskNotFoundException{
+    public void updateETA(long taskId, long eta) throws TaskNotFoundException {
         taskDao.updateETA(taskId, eta);
 
     }
@@ -120,7 +145,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public List<Task> findTasksInTaskGroup(Long taskGroupId) {
         List<Task> tasks = new ArrayList<>();
         List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
-        for (Relation relation: relations) {
+        for (Relation relation : relations) {
             tasks.add(relation.getTask());
         }
         return tasks;
@@ -130,7 +155,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public List<Task> findTasksInTaskGroup(SearchDto searchdto, Long taskGroupId) {
         List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
         List<Long> taskIds = new ArrayList<>();
-        for (Relation relation: relations) {
+        for (Relation relation : relations) {
             taskIds.add(relation.getTask().getId());
         }
 
@@ -150,12 +175,58 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return tasks;
     }
 
-    public List<Task> fetchParentTasks(long taskId){
+    public List<Task> fetchParentTasks(long taskId) {
         List<Relation> relations = taskDao.fetchById(taskId).getRelations();
         List<Long> parentIds = new ArrayList<>();
         for (Relation relation : relations) {
             parentIds.add(relation.getParentTaskId());
         }
         return taskDao.getAll(parentIds);
+    }
+
+    public DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId) {
+        return getTaskGraph(taskGroupId);
+    }
+
+    private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
+        DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
+        List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
+        List<Task> tasks = new ArrayList<>();
+        for (Relation relation : relations) {
+            tasks.add(relation.getTask());
+        }
+        List<Long> taskIdsAddedToGraph = new ArrayList<>();
+        for (Task task : tasks) {
+            if (!taskIdsAddedToGraph.contains(task.getId())) {
+                taskGraph.addVertex(task);
+                taskIdsAddedToGraph.add(task.getId());
+            }
+            List<Task> parentTasks = getParentTasks(relations, tasks, task);
+            for (Task parentTask : parentTasks) {
+                if (!taskIdsAddedToGraph.contains(parentTask.getId())) {
+                    taskGraph.addVertex(parentTask);
+                    taskIdsAddedToGraph.add(parentTask.getId());
+                }
+                taskGraph.addEdge(parentTask, task);
+            }
+
+        }
+        return taskGraph;
+    }
+
+    private List<Task> getParentTasks(List<Relation> relations, List<Task> tasks, Task task) {
+        List<Task> parentTasks = new ArrayList<>();
+        for (Relation eachRelation : relations) {
+            if (eachRelation.getTask().getId() == task.getId()) {
+                long parentTaskId = eachRelation.getParentTaskId();
+                for (Task eachTask : tasks) {
+                    if (eachTask.getId().longValue() == parentTaskId) {
+                        parentTasks.add(eachTask);
+                        break;
+                    }
+                }
+            }
+        }
+        return parentTasks;
     }
 }

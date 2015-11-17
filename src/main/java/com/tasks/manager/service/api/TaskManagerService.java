@@ -25,6 +25,7 @@ public interface TaskManagerService {
     TaskGroup fetchTaskGroup ( long tgId );
 
     Task createTask(Task task, long tgId);
+    Task createTaskWithParentTasks(Task task, long tgId, List<Long> parentTaskIds);
 
     Task fetchTask ( long taskId );
 
