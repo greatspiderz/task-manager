@@ -8,7 +8,9 @@ import com.tasks.manager.db.model.entities.Task;
 import com.tasks.manager.db.model.entities.TaskGroup;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
+import com.tasks.manager.dto.TaskGraphEdge;
 import com.tasks.manager.service.impl.TaskManagerServiceImpl;
+import org.jgrapht.DirectedGraph;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +45,6 @@ public interface TaskManagerService {
 
     List<Task> findTasksInTaskGroup(SearchDto searchdto, Long taskGroupId);
 
-
-
+    Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId);
+    DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId);
 }

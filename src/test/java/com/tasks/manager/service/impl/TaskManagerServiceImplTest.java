@@ -100,10 +100,8 @@ public class TaskManagerServiceImplTest {
     public void testUpdateSubject(){
         long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
-        long subjectId = 1;
-        String subjectType = "Store";
+        String subjectType = "Shipment";
         Subject subject = new Subject();
-        subject.setId(subjectId);
         subject.setType(subjectType);
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
         List<Task> taskList = taskManagerService.findTasksInTaskGroup(fetchedTaskGroup.getId());
@@ -115,7 +113,9 @@ public class TaskManagerServiceImplTest {
             fail("Exception thrown on updating subject");
         }
         Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertEquals(subjectId, updatedTask.getSubject().getId());
+        assertNotNull(updatedTask.getSubject());
+        assertNotNull("Shipment", updatedTask.getSubject().getType());
+        assertEquals(1, updatedTask.getSubject().getAssociatedTasks().size());
         assertEquals(subjectType, updatedTask.getSubject().getType());
     }
 
@@ -339,6 +339,7 @@ public class TaskManagerServiceImplTest {
         baseDaoImpl.executeQuery("Delete from task_attributes");
         baseDaoImpl.executeQuery("Delete from task");
         baseDaoImpl.executeQuery("Delete from task_group");
+        baseDaoImpl.executeQuery("Delete from subject");
 
     }
 

@@ -3,11 +3,8 @@ package com.tasks.manager.service.impl;
 import com.github.oxo42.stateless4j.StateMachine;
 import com.github.oxo42.stateless4j.StateMachineConfig;
 import com.google.inject.Inject;
-import com.tasks.manager.db.dao.interfaces.RelationDao;
-import com.tasks.manager.db.dao.interfaces.TaskAttributesDao;
-import com.tasks.manager.db.dao.interfaces.TaskDao;
+import com.tasks.manager.db.dao.interfaces.*;
 
-import com.tasks.manager.db.dao.interfaces.TaskGroupDao;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
@@ -38,18 +35,21 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final TaskGroupDao taskGroupDao;
     private final TaskAttributesDao taskAttributesDao;
     private final RelationDao relationDao;
+    private final SubjectDao subjectDao;
     private final StateMachineConfig taskStateMachineConfig;
 
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
                                   TaskGroupDao taskGroupDao,
                                   TaskAttributesDao taskAttributesDao,
-                                  StateMachineProvider stateMachineProvider, RelationDao relationDao) {
+                                  StateMachineProvider stateMachineProvider, RelationDao relationDao,
+                                  SubjectDao subjectDao) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
         this.relationDao = relationDao;
         this.taskStateMachineConfig = stateMachineProvider.get();
+        this.subjectDao=subjectDao;
     }
 
     @Override
@@ -113,7 +113,18 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Override
     public void updateSubject(long taskId, Subject subject) throws TaskNotFoundException {
-        taskDao.updateSubject(taskId, subject);
+        Task task = taskDao.fetchById(taskId);
+        if(task != null)
+        {
+            task.setSubject(subject);
+            if(subject.getAssociatedTasks()==null)
+                subject.setAssociatedTasks(new ArrayList<>());
+            subject.getAssociatedTasks().add(task);
+            subjectDao.save(subject);
+            taskDao.save(task);
+            return;
+        }
+        throw new TaskNotFoundException(taskId);
     }
 
     @Override
@@ -186,6 +197,17 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     public DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId) {
         return getTaskGraph(taskGroupId);
+    }
+
+    public Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId){
+        Relation relation = new Relation();
+        relation.setTaskGroup(taskGroup);
+        relation.setTask(task);
+        relation.setParentTaskId(parentTaskId);
+        task.getRelations().add(relation);
+        taskGroup.getRelations().add(relation);
+        relationDao.save(relation);
+        return task;
     }
 
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {

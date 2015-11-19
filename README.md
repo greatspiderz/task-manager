@@ -32,7 +32,7 @@ jgraphT ```{ url 'https://github.com/jgrapht/jgrapht' }``` library is used.
 
 * For maintaining state transitions(life cycle) for the tasks stateless4j ```{ url 'https://github.com/oxo42/stateless4j' }```
  library is used.
- 
+
 * creating a Task Group:
 ```
 TaskGroup taskGroup = new TaskGroup();

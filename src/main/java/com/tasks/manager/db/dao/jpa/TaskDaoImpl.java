@@ -28,17 +28,6 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         entityClass = Task.class;
     }
 
-    public void updateSubject(long id, Subject subject) throws TaskNotFoundException{
-        Task task = fetchById(id);
-        if(task != null)
-        {
-            task.setSubject(subject);
-            this.save(task);
-            return;
-        }
-        throw new TaskNotFoundException(id);
-    }
-
     public void updateActor(long id, Actor actor) throws TaskNotFoundException
     {
         Task task = fetchById(id);

@@ -32,7 +32,12 @@ public class Task extends BaseEntity{
     @Embedded
     private Actor actor;
 
-    @Embedded
+    @NotNull
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
+    @JsonProperty(value = "subject_id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     private Subject subject;
 
     @NotNull
