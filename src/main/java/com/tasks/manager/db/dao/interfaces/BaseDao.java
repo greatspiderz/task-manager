@@ -3,6 +3,7 @@ package com.tasks.manager.db.dao.interfaces;
 import com.google.inject.ImplementedBy;
 import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.dao.jpa.BaseDaoImpl;
+import com.tasks.manager.db.model.entities.BaseEntity;
 
 import javax.persistence.EntityManager;
 import javax.validation.constraints.NotNull;
@@ -20,7 +21,7 @@ public interface BaseDao<T> {
     T fetchById(long id);
 
     Class<T> getEntityClass();
-
+    <T extends BaseEntity> List<T> bulkInsert(List<T> entities);
     EntityManager getEntityManager();
     int executeQuery(final String queryStr);
     List<T> findByQueryAndNamedParams(final Integer firstResult, final Integer maxResults,

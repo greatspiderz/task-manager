@@ -81,6 +81,21 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
+    public TaskGroup saveTasks(TaskGroup taskGroup)
+    {
+        List<Relation> relations = taskGroup.getRelations();
+        List<Task> tasks = new ArrayList<>();
+        for(Relation relation:relations)
+        {
+            tasks.add(relation.getTask());
+        }
+        taskGroupDao.save(taskGroup);
+        taskDao.bulkInsert(tasks);
+        relationDao.bulkInsert(relations);
+        return taskGroup;
+    }
+
+    @Override
     public Task createTaskWithParentTasks(Task task, long tgId, List<Long> parentTaskIds) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         taskDao.save(task);
@@ -137,9 +152,9 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     private void updateTaskStateMachine(Task task, TaskStatus newStatus) {
         log.info("updating status of task " + task.getId() + " with trigger " + newStatus);
-        StateMachine<TaskStatus, TaskStatus> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
+        StateMachine<TaskStatus, TaskStatus> stateMachine = new StateMachine(task.getToStatus(), taskStateMachineConfig);
         stateMachine.fire(newStatus);
-        task.setStatus(newStatus);
+        task.setToStatus(newStatus);
     }
 
     @Override
@@ -153,7 +168,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.search(searchdto);
     }
 
-    public List<Task> findTasksInTaskGroup(Long taskGroupId) {
+    public List<Task> getTasksForTaskGroup(Long taskGroupId) {
         List<Task> tasks = new ArrayList<>();
         List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
         for (Relation relation : relations) {
@@ -162,8 +177,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return tasks;
     }
 
-    @Override
-    public List<Task> findTasksInTaskGroup(SearchDto searchdto, Long taskGroupId) {
+    public List<Task> getTasksForTaskGroup(SearchDto searchdto, Long taskGroupId) {
         List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
         List<Long> taskIds = new ArrayList<>();
         for (Relation relation : relations) {
@@ -171,6 +185,10 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
 
         return taskDao.getAll(taskIds);
+    }
+
+    public List<Task> bulkInsert(List<Task> tasks){
+        return taskDao.bulkInsert(tasks);
     }
 
     @Override

@@ -21,4 +21,5 @@ public interface TaskDao extends BaseDao<Task>{
     void updateStatus(long id, TaskStatus taskStatus) throws TaskNotFoundException;
     List<Task> search(SearchDto searchDto);
     List<Task> getAll(List<Long> taskIds);
+
 }

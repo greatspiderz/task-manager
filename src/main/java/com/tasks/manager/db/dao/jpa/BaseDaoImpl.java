@@ -1,5 +1,6 @@
 package com.tasks.manager.db.dao.jpa;
 
+import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.dao.interfaces.BaseDao;
@@ -14,6 +15,7 @@ import javax.persistence.Query;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.tasks.manager.db.model.entities.*;
@@ -42,6 +44,32 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
         }
         em.flush();
 //        return entity;
+    }
+
+    @Override
+    public <T extends BaseEntity> List<T> bulkInsert(List<T> entities) {
+        final List<T> savedEntities = new ArrayList<>(entities.size());
+        EntityManager entityManager = getEntityManager();
+        int batchCount = 0;
+        for (T entity : entities) {
+            savedEntities.add(persistOrMerge(entity, entityManager));
+            batchCount++;
+            if (batchCount % 10 == 0) {
+                // Flush a batch of inserts and release memory.
+                entityManager.flush();
+            }
+        }
+        entityManager.flush();
+        return savedEntities;
+    }
+
+    private <T extends BaseEntity> T persistOrMerge(T entity, EntityManager entityManager) {
+        if (entity.getId() == null) {
+            entityManager.persist(entity);
+            return entity;
+        } else {
+            return entityManager.merge(entity);
+        }
     }
 
     @Override

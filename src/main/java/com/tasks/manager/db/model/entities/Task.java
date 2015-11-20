@@ -25,9 +25,14 @@ import java.util.List;
 public class Task extends BaseEntity{
 
     @NotNull
-    @Column(name = "status")
+    @Column(name = "from_status")
     @Enumerated(EnumType.STRING)
-    private TaskStatus status = TaskStatus.NEW;
+    private TaskStatus fromStatus = null;
+
+    @NotNull
+    @Column(name = "to_status")
+    @Enumerated(EnumType.STRING)
+    private TaskStatus toStatus = TaskStatus.NEW;
 
     @Embedded
     private Actor actor;
