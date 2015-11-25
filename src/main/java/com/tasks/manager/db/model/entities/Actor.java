@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,5 +27,5 @@ public class Actor extends BaseEntity{
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "task")
-    private List<Task> associatedTasks;
+    private List<Task> associatedTasks = new ArrayList<>();
 }

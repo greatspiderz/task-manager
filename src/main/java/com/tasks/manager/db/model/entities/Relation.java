@@ -36,6 +36,7 @@ public class Relation extends BaseEntity {
 
     @NotNull
     @Column(name = "parent_task_id")
+    @JsonProperty(value = "parent_task_id")
     private long parentTaskId;
 
 }

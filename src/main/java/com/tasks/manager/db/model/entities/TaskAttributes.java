@@ -26,8 +26,10 @@ public class TaskAttributes extends BaseEntity{
     private Task task;
 
     @Column(name = "attribute_name")
-    private String attribute_name;
+    @JsonProperty(value = "attribute_name")
+    private String attributeName;
 
     @Column(name = "attribute_value")
-    private String attribute_value;
+    @JsonProperty(value = "attribute_value")
+    private String attributeValue;
 }

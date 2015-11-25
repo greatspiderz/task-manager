@@ -138,7 +138,10 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException{
+        createActor(actor);
         taskDao.updateTaskActor(taskId, actor);
+        Task task = taskDao.fetchById(taskId);
+        actor.getAssociatedTasks().add(task);
     }
     @Override
     public void updateSubject(long taskId, Subject subject) throws TaskNotFoundException {

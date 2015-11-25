@@ -67,8 +67,8 @@ public class TaskManagerServiceImplTest {
         List<TaskAttributes> taskAttributeList = task.getTaskAttributes();
         assertEquals(1, taskAttributeList.size());
         TaskAttributes taskAttribute = taskAttributeList.get(0);
-        assertEquals(taskAttribute.getAttribute_name(), defaultAttributeName);
-        assertEquals(taskAttribute.getAttribute_value(), defaultAttributeValue);
+        assertEquals(taskAttribute.getAttributeName(), defaultAttributeName);
+        assertEquals(taskAttribute.getAttributeValue(), defaultAttributeValue);
 
     }
 
@@ -76,22 +76,23 @@ public class TaskManagerServiceImplTest {
     public void testUpdateActor(){
         long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
-        long actorId = 1;
         String actorType = "Hero";
         Actor actor = new Actor();
-        actor.setId(actorId);
         actor.setType(actorType);
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
         List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
-        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
-        try{
+        Task task = taskList.get(0);
+        Assert.assertNull(task.getActor());
+        try {
             taskManagerService.updateTaskActor(task.getId(), actor);
-        }
-        catch(TaskNotFoundException e){
+        } catch (TaskNotFoundException e) {
             fail("Exception thrown on updating actor");
         }
+
         Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertEquals(actorId, (long) updatedTask.getActor().getId());
+        System.out.println(actor.getId());
+        System.out.println(updatedTask.getActor().getId());
+        assertEquals(actor.getId(), updatedTask.getActor().getId());
         assertEquals(actorType, updatedTask.getActor().getType());
     }
 
@@ -349,8 +350,8 @@ public class TaskManagerServiceImplTest {
     private long createTestTaskGroupWithTask(String attributeName, String attributeValue, TaskStatus status, String type)
     {
         TaskAttributes ta = new TaskAttributes();
-        ta.setAttribute_name(attributeName);
-        ta.setAttribute_value(attributeValue);
+        ta.setAttributeName(attributeName);
+        ta.setAttributeValue(attributeValue);
         Task task = new Task();
         task.setToStatus(status);
         task.setType(type);
