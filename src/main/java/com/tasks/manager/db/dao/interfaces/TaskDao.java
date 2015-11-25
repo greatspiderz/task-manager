@@ -16,9 +16,9 @@ import java.util.List;
  */
 @ImplementedBy(TaskDaoImpl.class)
 public interface TaskDao extends BaseDao<Task>{
-    void updateActor(long id, Actor actor) throws TaskNotFoundException;
-    void updateETA(long id, long eta) throws TaskNotFoundException;
-    void updateStatus(long id, TaskStatus taskStatus) throws TaskNotFoundException;
+    void updateTaskActor(Long id, Actor actor) throws TaskNotFoundException;
+    void updateETA(Long id, Long eta) throws TaskNotFoundException;
+    void updateStatus(Long id, TaskStatus taskStatus) throws TaskNotFoundException;
     List<Task> search(SearchDto searchDto);
     List<Task> getAll(List<Long> taskIds);
 

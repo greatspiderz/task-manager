@@ -31,8 +31,10 @@ public interface TaskManagerService {
 
     Task fetchTask ( long taskId );
 
-    void updateActor(long taskId, Actor actor) throws TaskNotFoundException;
-
+    void updateActorStatus(Long actorId, String status) throws TaskNotFoundException;
+    void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException;
+    Actor createActor(Actor actor);
+    Actor fetchActor(Long actorId);
     void updateSubject(long taskId, Subject subject) throws TaskNotFoundException;
 
     void updateStatus( long taskId, TaskStatus newStatus) throws TaskNotFoundException;

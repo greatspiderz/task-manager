@@ -28,19 +28,19 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         entityClass = Task.class;
     }
 
-    public void updateActor(long id, Actor actor) throws TaskNotFoundException
+    public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException
     {
-        Task task = fetchById(id);
+        Task task = fetchById(taskId);
         if(task != null)
         {
             task.setActor(actor);
             this.save(task);
             return;
         }
-        throw new TaskNotFoundException(id);
+        throw new TaskNotFoundException(taskId);
     }
 
-    public void updateETA(long id, long eta) throws TaskNotFoundException
+    public void updateETA(Long id, Long eta) throws TaskNotFoundException
     {
         Task task = fetchById(id);
         if(task != null)
@@ -52,7 +52,7 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         throw new TaskNotFoundException(id);
     }
 
-    public void updateStatus(long id, TaskStatus taskStatus) throws TaskNotFoundException
+    public void updateStatus(Long id, TaskStatus taskStatus) throws TaskNotFoundException
     {
         Task task = fetchById(id);
         if(task != null)

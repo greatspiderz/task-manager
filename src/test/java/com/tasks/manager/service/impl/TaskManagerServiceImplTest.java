@@ -85,13 +85,13 @@ public class TaskManagerServiceImplTest {
         List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
         Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         try{
-            taskManagerService.updateActor(task.getId(), actor);
+            taskManagerService.updateTaskActor(task.getId(), actor);
         }
         catch(TaskNotFoundException e){
             fail("Exception thrown on updating actor");
         }
         Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertEquals(actorId, updatedTask.getActor().getId());
+        assertEquals(actorId, (long) updatedTask.getActor().getId());
         assertEquals(actorType, updatedTask.getActor().getType());
     }
 
@@ -257,18 +257,22 @@ public class TaskManagerServiceImplTest {
     }
 
     @Test
-    public void testCreateRelation()
-    {
-        Task task = new Task();
-        task.setToStatus(TaskStatus.CANCELLED);
-        task.setType("PICK");
-        task.setStartTime(defaultDateTime);
-        task.setEndTime(defaultDateTime);
-
-        TaskGroup taskGrp = new TaskGroup();
-        TaskGroup tskGrpCreated = taskManagerService.createTaskGroup(taskGrp);
-//        taskManagerService.createRelation(task, )
+    public void testUpdateActorStatus(){
+        Actor actor = new Actor();
+        actor.setStatus("IDLE");
+        actor.setType("HERO");
+        Actor createdActor = taskManagerService.createActor(actor);
+        assertEquals("IDLE", createdActor.getStatus());
+        try{
+            taskManagerService.updateActorStatus(createdActor.getId(), "OFFLINE");}
+        catch(Exception e)
+        {
+            fail("Exception thrown on updating actor");
+        }
+        Actor updatedActor = taskManagerService.fetchActor(createdActor.getId());
+        assertEquals("OFFLINE", createdActor.getStatus());
     }
+
     @Test
     public void testFetchTaskGraphStraightFlow()
     {

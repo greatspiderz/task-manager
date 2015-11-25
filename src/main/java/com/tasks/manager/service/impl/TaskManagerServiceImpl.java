@@ -36,6 +36,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final TaskAttributesDao taskAttributesDao;
     private final RelationDao relationDao;
     private final SubjectDao subjectDao;
+    private final ActorDao actorDao;
     private final StateMachineConfig taskStateMachineConfig;
 
     @Inject
@@ -43,13 +44,14 @@ public class TaskManagerServiceImpl implements TaskManagerService {
                                   TaskGroupDao taskGroupDao,
                                   TaskAttributesDao taskAttributesDao,
                                   StateMachineProvider stateMachineProvider, RelationDao relationDao,
-                                  SubjectDao subjectDao) {
+                                  SubjectDao subjectDao, ActorDao actorDao) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
         this.relationDao = relationDao;
         this.taskStateMachineConfig = stateMachineProvider.get();
         this.subjectDao=subjectDao;
+        this.actorDao = actorDao;
     }
 
     @Override
@@ -121,11 +123,23 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateActor(long taskId, Actor actor) throws TaskNotFoundException {
-        taskDao.updateActor(taskId, actor);
-
+    public void updateActorStatus(Long actorId, String status) throws TaskNotFoundException {
+        actorDao.updateActorStatus(actorId, status);
+    }
+    @Override
+    public Actor createActor(Actor actor){
+        actorDao.save(actor);
+        return actor;
     }
 
+    @Override
+    public Actor fetchActor(Long actorId){
+        return actorDao.fetchById(actorId);
+    }
+
+    public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException{
+        taskDao.updateTaskActor(taskId, actor);
+    }
     @Override
     public void updateSubject(long taskId, Subject subject) throws TaskNotFoundException {
         Task task = taskDao.fetchById(taskId);

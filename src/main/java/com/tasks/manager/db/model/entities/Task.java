@@ -34,7 +34,11 @@ public class Task extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private TaskStatus toStatus = TaskStatus.NEW;
 
-    @Embedded
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "actor_id")
+    @JsonProperty(value = "actor_id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     private Actor actor;
 
     @NotNull
@@ -70,4 +74,6 @@ public class Task extends BaseEntity{
     @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "relation")
     private List<Relation> relations;
+
+
 }
