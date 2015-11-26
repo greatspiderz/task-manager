@@ -194,6 +194,18 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return tasks;
     }
 
+    @Override
+    public TaskGroup getTaskGroupForTask(Task task)
+    {
+        List<Relation> relations = task.getRelations();
+        if(relations.size() > 0)
+        {
+            Relation relation = relations.get(0);
+            return relation.getTaskGroup();
+        }
+        return null;
+    }
+
     public List<Task> getTasksForTaskGroup(SearchDto searchdto, Long taskGroupId) {
         List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
         List<Long> taskIds = new ArrayList<>();

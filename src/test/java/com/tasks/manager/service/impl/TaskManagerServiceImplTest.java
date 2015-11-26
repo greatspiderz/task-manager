@@ -273,6 +273,15 @@ public class TaskManagerServiceImplTest {
         Actor updatedActor = taskManagerService.fetchActor(createdActor.getId());
         assertEquals("OFFLINE", createdActor.getStatus());
     }
+    @Test
+    public void testGetTaskGroupForTask(){
+        Long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        TaskGroup createdTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+        Task task = taskManagerService.getTasksForTaskGroup(createdTaskGroupId).get(0);
+        TaskGroup taskGroup = taskManagerService.getTaskGroupForTask(task);
+        assertEquals(taskGroup.getId(), createdTaskGroupId);
+    }
 
     @Test
     public void testFetchTaskGraphStraightFlow()

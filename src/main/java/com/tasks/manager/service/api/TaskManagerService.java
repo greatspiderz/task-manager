@@ -50,4 +50,5 @@ public interface TaskManagerService {
     Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId);
     DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId);
     TaskGroup saveTasks(TaskGroup taskGroup);
+    TaskGroup getTaskGroupForTask(Task task);
 }
