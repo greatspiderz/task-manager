@@ -15,6 +15,9 @@ allprojects {
     repositories {
         mavenCentral()
         maven { url 'http://repo.maven.apache.org/maven2' }
+        maven { url 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-releases' }
+        maven { url 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshot' }
+        maven { url 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshot-local' }
     }
 
 
@@ -33,8 +36,10 @@ allprojects {
         compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '3.0'
         compile 'com.google.guava:guava:15.0'
         compile 'org.jgrapht:jgrapht-core:0.9.1'
+        compile 'com.fquick:fquick-hibernate-restbus-plugin:1.0.6-SNAPSHOT'
         compile group: 'com.github.oxo42', name: 'stateless4j', version:'2.5.0'
         testCompile "junit:junit:4.11"
+        compile group: 'flipkart.scm', name: 'java-cas-client', version: '0.0.16'
 
     }
 
