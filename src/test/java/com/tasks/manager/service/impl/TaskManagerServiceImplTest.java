@@ -390,6 +390,8 @@ public class TaskManagerServiceImplTest {
         baseDaoImpl.executeQuery("Delete from task");
         baseDaoImpl.executeQuery("Delete from task_group");
         baseDaoImpl.executeQuery("Delete from subject");
+        baseDaoImpl.executeQuery("Delete from inbound_messages");
+        baseDaoImpl.executeQuery("Delete from outbound_messages");
     }
 
 }

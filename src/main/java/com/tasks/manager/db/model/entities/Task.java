@@ -21,7 +21,7 @@ import java.util.List;
 @Entity
 @Table(name = "task")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(callSuper=true, exclude = {"taskAttributes"})
+@EqualsAndHashCode(callSuper=true, exclude = {"taskAttributes","relations"})
 public class Task extends BaseEntity{
 
     @NotNull
@@ -36,7 +36,6 @@ public class Task extends BaseEntity{
     @JsonIdentityReference(alwaysAsId = true)
     private Actor actor;
 
-    @NotNull
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     @JsonProperty(value = "subject_id")
@@ -72,6 +71,7 @@ public class Task extends BaseEntity{
 
     @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "task_history")
+    // Use Enver here for auditing
     private List<TaskHistory> taskHistory = new ArrayList<>();
 
 }
