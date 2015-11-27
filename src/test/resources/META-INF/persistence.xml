@@ -11,6 +11,9 @@ http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
         <class>com.tasks.manager.db.model.entities.Relation</class>
         <class>com.tasks.manager.db.model.entities.Actor</class>
         <class>com.tasks.manager.db.model.entities.Subject</class>
+        <class>com.tasks.manager.db.model.entities.TaskHistory</class>
+        <class>com.restbus.client.plugin.hibernate.entity.OutboundMessageEntity</class>
+        <class>com.restbus.client.plugin.hibernate.entity.InboundMessageEntity</class>
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost/task_manager" />
             <property name="javax.persistence.jdbc.user" value="root" />

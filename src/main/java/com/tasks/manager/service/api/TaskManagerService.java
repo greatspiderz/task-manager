@@ -45,10 +45,10 @@ public interface TaskManagerService {
 
     List<Task> findTasksForAttributes(HashMap<String, String> attibuteNameValue);
 
-    List<Task> getTasksForTaskGroup(SearchDto searchdto, Long taskGroupId);
-
+    List<Task> getTasksForTaskGroup(Long taskGroupId);
     Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId);
     DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId);
     TaskGroup saveTasks(TaskGroup taskGroup);
     TaskGroup getTaskGroupForTask(Task task);
+
 }

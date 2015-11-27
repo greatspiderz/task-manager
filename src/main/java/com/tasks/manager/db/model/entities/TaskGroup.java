@@ -19,6 +19,7 @@ import java.util.List;
 @Entity
 @Table(name = "task_group")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(callSuper=true, exclude = {"relations"})
 public class TaskGroup extends BaseEntity{
 
     @OneToMany(mappedBy = "taskGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

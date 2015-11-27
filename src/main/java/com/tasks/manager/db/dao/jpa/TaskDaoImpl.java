@@ -57,8 +57,7 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         Task task = fetchById(id);
         if(task != null)
         {
-            task.setFromStatus(task.getToStatus());
-            task.setToStatus(taskStatus);
+            task.setStatus(taskStatus);
             this.save(task);
             return;
         }
@@ -74,7 +73,7 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         List<String> queryParamStringList = new ArrayList<>();
         if(searchDto.getStatus()!=null)
         {
-            queryParamStringList.add("t.toStatus = :status");
+            queryParamStringList.add("t.status = :status");
             namedParamMapBuilder.put("status", searchDto.getStatus());
         }
 

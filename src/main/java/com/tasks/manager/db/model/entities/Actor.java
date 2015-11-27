@@ -20,10 +20,15 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper=true)
 public class Actor extends BaseEntity{
+
     @Column(name = "type")
     private String type;
+
     @Column(name = "status")
     private String status;
+
+    @Column(name = "external_id")
+    private Long externalId;
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "task")

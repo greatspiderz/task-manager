@@ -61,8 +61,9 @@ public class TaskManagerServiceImplTest {
         List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
         assertEquals(1, taskList.size());
         Task task = taskList.get(0);
-        assertEquals(task.getFromStatus(), null);
-        assertEquals(task.getToStatus(), defaultTaskStatus);
+        List<TaskHistory> taskHistory = task.getTaskHistory();
+        assertEquals(taskHistory.size(), 1);
+        assertEquals(task.getStatus(), defaultTaskStatus);
         assertEquals(task.getType(), defaultTaskType);
         List<TaskAttributes> taskAttributeList = task.getTaskAttributes();
         assertEquals(1, taskAttributeList.size());
@@ -134,7 +135,9 @@ public class TaskManagerServiceImplTest {
             fail("Exception thrown on updating actor");
         }
         Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertEquals(newStatus, updatedTask.getToStatus());
+        assertEquals(newStatus, updatedTask.getStatus());
+        assertEquals(2, updatedTask.getTaskHistory().size());
+        assertEquals(TaskStatus.IN_PROGRESS, updatedTask.getTaskHistory().get(1).getTask().getStatus());
     }
 
     @Test
@@ -198,11 +201,11 @@ public class TaskManagerServiceImplTest {
         Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         SearchDto searchDto = new SearchDto();
         searchDto.setType(task.getType());
-        searchDto.setStatus(task.getToStatus());
+        searchDto.setStatus(task.getStatus());
         List<Task> searchedTasks = taskManagerService.findTasks(searchDto);
         assertEquals(1, searchedTasks.size());
         Task searchedTask = searchedTasks.get(0);
-        assertEquals(task.getToStatus(), searchedTask.getToStatus());
+        assertEquals(task.getStatus(), searchedTask.getStatus());
         assertEquals(task.getType(), searchedTask.getType());
     }
 
@@ -228,7 +231,7 @@ public class TaskManagerServiceImplTest {
         Task parentTask = taskList.get(0);
         Task task = new Task();
         task.setType("HAND_SHAKE");
-        task.setToStatus(TaskStatus.CANCELLED);
+        task.setStatus(TaskStatus.CANCELLED);
         Relation relation = new Relation();
         relation.setParentTaskId(parentTask.getId());
         relation.setTask(task);
@@ -295,7 +298,7 @@ public class TaskManagerServiceImplTest {
 
         Task handShakeTask = new Task();
         handShakeTask.setType("HAND_SHAKE");
-        handShakeTask.setToStatus(TaskStatus.NEW);
+        handShakeTask.setStatus(TaskStatus.NEW);
         List<Long> parentIds = new ArrayList<>();
         parentIds.add(parentTask.getId());
         taskManagerService.createTaskWithParentTasks(handShakeTask, createdTaskGroupId, parentIds);
@@ -304,7 +307,7 @@ public class TaskManagerServiceImplTest {
 
         Task travelTask1 = new Task();
         travelTask1.setType("TRAVEL");
-        travelTask1.setToStatus(TaskStatus.NEW);
+        travelTask1.setStatus(TaskStatus.NEW);
         parentIds = new ArrayList<>();
         parentIds.add(handShakeTask.getId());
         taskManagerService.createTaskWithParentTasks(travelTask1, createdTaskGroupId, parentIds);
@@ -312,7 +315,7 @@ public class TaskManagerServiceImplTest {
 
         Task travelTask2 = new Task();
         travelTask2.setType("TRAVEL");
-        travelTask2.setToStatus(TaskStatus.NEW);
+        travelTask2.setStatus(TaskStatus.NEW);
         parentIds = new ArrayList<>();
         parentIds.add(handShakeTask.getId());
         taskManagerService.createTaskWithParentTasks(travelTask2, createdTaskGroupId, parentIds);
@@ -320,7 +323,7 @@ public class TaskManagerServiceImplTest {
 
         Task deliver = new Task();
         deliver.setType("DELIVER");
-        deliver.setToStatus(TaskStatus.NEW);
+        deliver.setStatus(TaskStatus.NEW);
         parentIds = new ArrayList<>();
         parentIds.add(travelTask1.getId());
         parentIds.add(travelTask2.getId());
@@ -362,7 +365,7 @@ public class TaskManagerServiceImplTest {
         ta.setAttributeName(attributeName);
         ta.setAttributeValue(attributeValue);
         Task task = new Task();
-        task.setToStatus(status);
+        task.setStatus(status);
         task.setType(type);
         task.setStartTime(defaultDateTime);
         task.setEndTime(defaultDateTime);
@@ -383,6 +386,7 @@ public class TaskManagerServiceImplTest {
         BaseDaoImpl baseDaoImpl = injector.getInstance(BaseDaoImpl.class);
         baseDaoImpl.executeQuery("Delete from relation");
         baseDaoImpl.executeQuery("Delete from task_attributes");
+        baseDaoImpl.executeQuery("Delete from task_history");
         baseDaoImpl.executeQuery("Delete from task");
         baseDaoImpl.executeQuery("Delete from task_group");
         baseDaoImpl.executeQuery("Delete from subject");

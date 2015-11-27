@@ -2,14 +2,8 @@ package com.tasks.manager;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.persist.UnitOfWork;
-import com.tasks.manager.db.dao.interfaces.SubjectDao;
-import com.tasks.manager.db.dao.interfaces.TaskAttributesDao;
-import com.tasks.manager.db.dao.interfaces.TaskDao;
-import com.tasks.manager.db.dao.interfaces.TaskGroupDao;
-import com.tasks.manager.db.dao.jpa.SubjectDaoImpl;
-import com.tasks.manager.db.dao.jpa.TaskAttributesDaoImpl;
-import com.tasks.manager.db.dao.jpa.TaskDaoImpl;
-import com.tasks.manager.db.dao.jpa.TaskGroupDaoImpl;
+import com.tasks.manager.db.dao.interfaces.*;
+import com.tasks.manager.db.dao.jpa.*;
 import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.service.impl.TaskManagerServiceImpl;
 
@@ -24,6 +18,7 @@ public class BindingClassForTests extends AbstractModule {
         bind(TaskGroupDao.class).to(TaskGroupDaoImpl.class);
         bind(TaskAttributesDao.class).to(TaskAttributesDaoImpl.class);
         bind(SubjectDao.class).to(SubjectDaoImpl.class);
+        bind(TaskHistoryDao.class).to(TaskHistoryDaoImpl.class);
 
     }
 

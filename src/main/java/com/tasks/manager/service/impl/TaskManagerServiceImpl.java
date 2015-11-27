@@ -37,6 +37,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final RelationDao relationDao;
     private final SubjectDao subjectDao;
     private final ActorDao actorDao;
+    private final TaskHistoryDao taskHistoryDao;
     private final StateMachineConfig taskStateMachineConfig;
 
     @Inject
@@ -44,7 +45,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
                                   TaskGroupDao taskGroupDao,
                                   TaskAttributesDao taskAttributesDao,
                                   StateMachineProvider stateMachineProvider, RelationDao relationDao,
-                                  SubjectDao subjectDao, ActorDao actorDao) {
+                                  SubjectDao subjectDao, ActorDao actorDao, TaskHistoryDao taskHistoryDao) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
@@ -52,6 +53,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         this.taskStateMachineConfig = stateMachineProvider.get();
         this.subjectDao=subjectDao;
         this.actorDao = actorDao;
+        this.taskHistoryDao = taskHistoryDao;
     }
 
     @Override
@@ -70,6 +72,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         Relation relation = new Relation();
         taskDao.save(task);
+        saveTaskHistory(task);
         relation.setTaskGroup(taskGroup);
         relation.setTask(task);
         if (task.getRelations() == null)
@@ -82,6 +85,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return task;
     }
 
+
     @Override
     public TaskGroup saveTasks(TaskGroup taskGroup)
     {
@@ -92,6 +96,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             tasks.add(relation.getTask());
         }
         taskGroupDao.save(taskGroup);
+        for(Task task: tasks)
+        {
+            saveTaskHistory(task);
+        }
+
         taskDao.bulkInsert(tasks);
         relationDao.bulkInsert(relations);
         return taskGroup;
@@ -101,6 +110,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public Task createTaskWithParentTasks(Task task, long tgId, List<Long> parentTaskIds) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         taskDao.save(task);
+        saveTaskHistory(task);
         for (Long parentTaskId : parentTaskIds) {
             Relation relation = new Relation();
             relation.setTaskGroup(taskGroup);
@@ -126,6 +136,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public void updateActorStatus(Long actorId, String status) throws TaskNotFoundException {
         actorDao.updateActorStatus(actorId, status);
     }
+
     @Override
     public Actor createActor(Actor actor){
         actorDao.save(actor);
@@ -163,15 +174,19 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public void updateStatus(long taskId, TaskStatus newStatus) throws TaskNotFoundException {
         Task task = fetchTask(taskId);
         updateTaskStateMachine(task, newStatus);
-
+        TaskHistory taskHistory = new TaskHistory();
+        taskHistory.setTaskStatus(newStatus);
+        taskHistory.setTask(task);
+        task.getTaskHistory().add(taskHistory);
+        taskHistoryDao.save(taskHistory);
         taskDao.updateStatus(taskId, newStatus);
     }
 
     private void updateTaskStateMachine(Task task, TaskStatus newStatus) {
         log.info("updating status of task " + task.getId() + " with trigger " + newStatus);
-        StateMachine<TaskStatus, TaskStatus> stateMachine = new StateMachine(task.getToStatus(), taskStateMachineConfig);
+        StateMachine<TaskStatus, TaskStatus> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
         stateMachine.fire(newStatus);
-        task.setToStatus(newStatus);
+        task.setStatus(newStatus);
     }
 
     @Override
@@ -185,6 +200,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.search(searchdto);
     }
 
+    @Override
     public List<Task> getTasksForTaskGroup(Long taskGroupId) {
         List<Task> tasks = new ArrayList<>();
         List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
@@ -204,16 +220,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             return relation.getTaskGroup();
         }
         return null;
-    }
-
-    public List<Task> getTasksForTaskGroup(SearchDto searchdto, Long taskGroupId) {
-        List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
-        List<Long> taskIds = new ArrayList<>();
-        for (Relation relation : relations) {
-            taskIds.add(relation.getTask().getId());
-        }
-
-        return taskDao.getAll(taskIds);
     }
 
     public List<Task> bulkInsert(List<Task> tasks){
@@ -298,4 +304,13 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
         return parentTasks;
     }
+
+    private void saveTaskHistory(Task task) {
+        TaskHistory taskHistory = new TaskHistory();
+        taskHistory.setTask(task);
+        taskHistory.setTaskStatus(task.getStatus());
+        task.getTaskHistory().add(taskHistory);
+        taskHistoryDao.save(taskHistory);
+    }
+
 }

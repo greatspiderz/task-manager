@@ -25,14 +25,9 @@ import java.util.List;
 public class Task extends BaseEntity{
 
     @NotNull
-    @Column(name = "from_status")
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private TaskStatus fromStatus = null;
-
-    @NotNull
-    @Column(name = "to_status")
-    @Enumerated(EnumType.STRING)
-    private TaskStatus toStatus = TaskStatus.NEW;
+    private TaskStatus status = TaskStatus.NEW;
 
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id")
@@ -75,5 +70,8 @@ public class Task extends BaseEntity{
     @JsonProperty(value = "relation")
     private List<Relation> relations;
 
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonProperty(value = "task_history")
+    private List<TaskHistory> taskHistory = new ArrayList<>();
 
 }
