@@ -1,5 +1,9 @@
 package com.tasks.manager.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flipkart.restbus.client.core.MessageSender;
+import com.flipkart.restbus.client.entity.Event;
+import com.fquick.resthibernateplugin.core.annotations.AsyncAnnotation;
 import com.github.oxo42.stateless4j.StateMachine;
 import com.github.oxo42.stateless4j.StateMachineConfig;
 import com.google.inject.Inject;
@@ -12,10 +16,12 @@ import com.tasks.manager.dto.SearchDto;
 import com.tasks.manager.dto.TaskGraphEdge;
 import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
+import com.tasks.manager.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import com.google.inject.persist.Transactional;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,21 +45,31 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final ActorDao actorDao;
     private final TaskHistoryDao taskHistoryDao;
     private final StateMachineConfig taskStateMachineConfig;
-
+    private final MessageSender sender;
+    private final ObjectMapper objectMapper;
+    private String restEnv;
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
                                   TaskGroupDao taskGroupDao,
                                   TaskAttributesDao taskAttributesDao,
                                   StateMachineProvider stateMachineProvider, RelationDao relationDao,
-                                  SubjectDao subjectDao, ActorDao actorDao, TaskHistoryDao taskHistoryDao) {
+                                  SubjectDao subjectDao, ActorDao actorDao, TaskHistoryDao taskHistoryDao,
+                                  @AsyncAnnotation MessageSender sender,
+                                  ObjectMapper objectMapper) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
         this.relationDao = relationDao;
         this.taskStateMachineConfig = stateMachineProvider.get();
-        this.subjectDao=subjectDao;
+        this.subjectDao = subjectDao;
         this.actorDao = actorDao;
         this.taskHistoryDao = taskHistoryDao;
+        this.sender = sender;
+        this.objectMapper = objectMapper;
+    }
+
+    public void setRestEnv(String restEnv){
+        this.restEnv=restEnv;
     }
 
     @Override
@@ -82,23 +98,22 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         task.getRelations().add(relation);
         taskGroup.getRelations().add(relation);
         relationDao.save(relation);
+        publishTaskEvent(task, "");
         return task;
     }
 
 
     @Override
-    public TaskGroup saveTasks(TaskGroup taskGroup)
-    {
+    public TaskGroup saveTasks(TaskGroup taskGroup) {
         List<Relation> relations = taskGroup.getRelations();
         List<Task> tasks = new ArrayList<>();
-        for(Relation relation:relations)
-        {
+        for (Relation relation : relations) {
             tasks.add(relation.getTask());
         }
         taskGroupDao.save(taskGroup);
-        for(Task task: tasks)
-        {
+        for (Task task : tasks) {
             saveTaskHistory(task);
+            publishTaskEvent(task, "");
         }
 
         taskDao.bulkInsert(tasks);
@@ -138,29 +153,29 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public Actor createActor(Actor actor){
+    public Actor createActor(Actor actor) {
         actorDao.save(actor);
         return actor;
     }
 
     @Override
-    public Actor fetchActor(Long actorId){
+    public Actor fetchActor(Long actorId) {
         return actorDao.fetchById(actorId);
     }
 
-    public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException{
+    public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException {
         createActor(actor);
         taskDao.updateTaskActor(taskId, actor);
         Task task = taskDao.fetchById(taskId);
         actor.getAssociatedTasks().add(task);
     }
+
     @Override
     public void updateSubject(long taskId, Subject subject) throws TaskNotFoundException {
         Task task = taskDao.fetchById(taskId);
-        if(task != null)
-        {
+        if (task != null) {
             task.setSubject(subject);
-            if(subject.getAssociatedTasks()==null)
+            if (subject.getAssociatedTasks() == null)
                 subject.setAssociatedTasks(new ArrayList<>());
             subject.getAssociatedTasks().add(task);
             subjectDao.save(subject);
@@ -174,12 +189,15 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public void updateStatus(long taskId, TaskStatus newStatus) throws TaskNotFoundException {
         Task task = fetchTask(taskId);
         updateTaskStateMachine(task, newStatus);
+        TaskStatus fromTaskStatus = task.getStatus();
         TaskHistory taskHistory = new TaskHistory();
         taskHistory.setTaskStatus(newStatus);
         taskHistory.setTask(task);
         task.getTaskHistory().add(taskHistory);
         taskHistoryDao.save(taskHistory);
         taskDao.updateStatus(taskId, newStatus);
+        task.setStatus(newStatus);
+        publishTaskEvent(task, fromTaskStatus.name());
     }
 
     private void updateTaskStateMachine(Task task, TaskStatus newStatus) {
@@ -211,18 +229,16 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public TaskGroup getTaskGroupForTask(Task task)
-    {
+    public TaskGroup getTaskGroupForTask(Task task) {
         List<Relation> relations = task.getRelations();
-        if(relations.size() > 0)
-        {
+        if (relations.size() > 0) {
             Relation relation = relations.get(0);
             return relation.getTaskGroup();
         }
         return null;
     }
 
-    public List<Task> bulkInsert(List<Task> tasks){
+    public List<Task> bulkInsert(List<Task> tasks) {
         return taskDao.bulkInsert(tasks);
     }
 
@@ -252,7 +268,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return getTaskGraph(taskGroupId);
     }
 
-    public Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId){
+    public Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId) {
         Relation relation = new Relation();
         relation.setTaskGroup(taskGroup);
         relation.setTask(task);
@@ -313,4 +329,14 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         taskHistoryDao.save(taskHistory);
     }
 
+    private void publishTaskEvent(Task task, String fromTaskStatus) {
+        try {
+            Event event = new Event("TaskEvent", this.objectMapper.writeValueAsString(Utils.getTaskEvent(task, fromTaskStatus)));
+            event.setExchangeName(this.restEnv + ".XXX.YYY.ZZZ");
+            event.setExchangeType("topic");
+            sender.publish(event);
+        } catch (IOException e) {
+            log.error("Exception found while publishing event to RestBus", e.getMessage());
+        }
+    }
 }

@@ -37,6 +37,7 @@ public class TaskManagerServiceImplTest {
 
     @Before
     public void setUp(){
+
         injector = Guice.createInjector(new BindingClassForTests(), new JpaPersistModule("test"));
         persistService = injector.getInstance(PersistService.class);
         persistService.start();
@@ -44,6 +45,7 @@ public class TaskManagerServiceImplTest {
         transaction.getEntityManager().getTransaction().begin();
         emptyDatabases();
         taskManagerService = injector.getInstance(TaskManagerServiceImpl.class);
+        this.taskManagerService.setRestEnv("testEnv");
         defaultDateTime = DateTime.parse("2015-10-09");
         defaultTaskStatus = TaskStatus.NEW;
         defaultTaskType = "PICK";

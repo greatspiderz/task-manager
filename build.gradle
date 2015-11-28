@@ -41,9 +41,10 @@ allprojects {
         }
         compile group: 'com.github.oxo42', name: 'stateless4j', version:'2.5.0'
         testCompile "junit:junit:4.11"
-        //compile group: 'flipkart.scm', name: 'java-cas-client', version: '0.0.16'
+        compile group: 'flipkart.scm', name: 'java-cas-client', version: '0.0.16'
 
     }
+
 
     task sourceJar(type: Jar) {
         classifier = 'sources'
