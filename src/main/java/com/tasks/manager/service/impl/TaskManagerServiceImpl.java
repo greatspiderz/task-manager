@@ -229,7 +229,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return null;
     }
 
-    public List<Task> bulkInsert(List<Task> tasks) {
+    public List<Task> bulkInsertTasks(List<Task> tasks) {
         return taskDao.bulkInsert(tasks);
     }
 

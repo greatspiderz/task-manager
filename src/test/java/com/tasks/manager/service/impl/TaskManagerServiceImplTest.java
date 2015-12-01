@@ -169,7 +169,7 @@ public class TaskManagerServiceImplTest {
         listTasks.add(t1);
         listTasks.add(t2);
         listTasks.add(t3);
-        taskManagerService.bulkInsert(listTasks);
+        taskManagerService.bulkInsertTasks(listTasks);
         SearchDto searchdto = new SearchDto();
         searchdto.setType("PICK");
         List<Task> tasks = taskManagerService.findTasks(searchdto);

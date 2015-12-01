@@ -52,5 +52,5 @@ public interface TaskManagerService {
     TaskGroup getTaskGroupForTask(Task task);
     void updateParentTask(Task task, Long parentTaskId);
     List<Task> getTasksforSubject(Long subjectId);
-
+    List<Task> bulkInsertTasks(List<Task> tasks);
 }
