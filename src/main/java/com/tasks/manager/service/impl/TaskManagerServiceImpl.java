@@ -167,7 +167,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateSubject(long taskId, Subject subject) throws TaskNotFoundException {
+    public void updateSubject(Long taskId, Subject subject) throws TaskNotFoundException {
         Task task = taskDao.fetchById(taskId);
         if (task != null) {
             task.setSubject(subject);
@@ -182,7 +182,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateStatus(long taskId, TaskStatus newStatus) throws TaskNotFoundException {
+    public void updateStatus(Long taskId, TaskStatus newStatus) throws TaskNotFoundException {
         Task task = fetchTask(taskId);
         updateTaskStateMachine(task, newStatus);
         TaskStatus fromTaskStatus = task.getStatus();
@@ -199,7 +199,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateETA(long taskId, long eta) throws TaskNotFoundException {
+    public void updateETA(Long taskId, Long eta) throws TaskNotFoundException {
         taskDao.updateETA(taskId, eta);
 
     }
@@ -282,10 +282,10 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public List<Task> getTasksforSubject(Long subjectId) {
+    public List<Task> getTasksforSubject(String externalId) {
         SearchDto searchDto = new SearchDto();
         Subject subject = new Subject();
-        subject.setId(subjectId);
+        subject.setExternalId(externalId);
         searchDto.setSubject(subject);
         return taskDao.search(searchDto);
     }

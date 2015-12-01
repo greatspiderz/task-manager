@@ -28,7 +28,7 @@ public class Actor extends BaseEntity{
     private String status;
 
     @Column(name = "external_id")
-    private Long externalId;
+    private String externalId;
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "task")

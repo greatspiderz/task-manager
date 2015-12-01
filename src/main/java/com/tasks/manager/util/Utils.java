@@ -18,7 +18,7 @@ public class Utils {
         taskEvent.setTaskId(task.getId());
 
         if(task.getActor()!=null)
-            taskEvent.setActorId(task.getActor().getExternalId());
+            taskEvent.setActorId(task.getActor().getId());
         if(task.getSubject()!=null)
             taskEvent.setSubjectId(task.getSubject().getId());
 

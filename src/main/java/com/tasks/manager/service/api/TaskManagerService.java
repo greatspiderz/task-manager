@@ -35,11 +35,11 @@ public interface TaskManagerService {
     void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException;
     Actor createActor(Actor actor);
     Actor fetchActor(Long actorId);
-    void updateSubject(long taskId, Subject subject) throws TaskNotFoundException;
+    void updateSubject(Long taskId, Subject subject) throws TaskNotFoundException;
 
-    void updateStatus( long taskId, TaskStatus newStatus) throws TaskNotFoundException;
+    void updateStatus( Long taskId, TaskStatus newStatus) throws TaskNotFoundException;
 
-    void updateETA( long taskId, long eta) throws TaskNotFoundException;
+    void updateETA( Long taskId, Long eta) throws TaskNotFoundException;
 
     List<Task> findTasks(SearchDto searchdto);
 
@@ -51,6 +51,6 @@ public interface TaskManagerService {
     TaskGroup saveTasks(TaskGroup taskGroup);
     TaskGroup getTaskGroupForTask(Task task);
     void updateParentTask(Task task, Long parentTaskId);
-    List<Task> getTasksforSubject(Long subjectId);
+    List<Task> getTasksforSubject(String subjectExternalId);
     List<Task> bulkInsertTasks(List<Task> tasks);
 }

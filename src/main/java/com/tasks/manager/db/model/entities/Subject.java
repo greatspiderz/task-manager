@@ -22,6 +22,9 @@ public class Subject extends BaseEntity{
     @Column(name = "type")
     private String type;
 
+    @Column(name = "external_id")
+    private String externalId;
+
     @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "task")
     private List<Task> associatedTasks;

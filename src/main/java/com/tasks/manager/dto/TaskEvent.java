@@ -28,7 +28,6 @@ public class TaskEvent {
     @JsonProperty("actor_id")
     private Long actorId;
 
-
     @JsonProperty("task_id")
     private Long taskId;
 
