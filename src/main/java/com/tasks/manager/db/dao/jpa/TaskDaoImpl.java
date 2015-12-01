@@ -87,10 +87,11 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         {
             queryParamStringList.add("t.actor_id = :actor_id");
             namedParamMapBuilder.put("actor_id", searchDto.getActor().getId());
-            queryParamStringList.add("t.actor_type = :actor_type");
-            namedParamMapBuilder.put("actor_type", searchDto.getActor().getType());
         }
-
+        if(searchDto.getSubject()!=null){
+            queryParamStringList.add("t.subject_id = :subject_id");
+            namedParamMapBuilder.put("subject_id", searchDto.getSubject().getId());
+        }
         ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
         queryString.append(String.join( " and ", queryParamStringList));
         List<Task> taskResults = new ArrayList<>();

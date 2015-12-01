@@ -63,8 +63,7 @@ public class TaskManagerServiceImplTest {
         List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
         assertEquals(1, taskList.size());
         Task task = taskList.get(0);
-        List<TaskHistory> taskHistory = task.getTaskHistory();
-        assertEquals(taskHistory.size(), 1);
+
         assertEquals(task.getStatus(), defaultTaskStatus);
         assertEquals(task.getType(), defaultTaskType);
         List<TaskAttributes> taskAttributeList = task.getTaskAttributes();
@@ -138,8 +137,6 @@ public class TaskManagerServiceImplTest {
         }
         Task updatedTask = taskManagerService.fetchTask(task.getId());
         assertEquals(newStatus, updatedTask.getStatus());
-        assertEquals(2, updatedTask.getTaskHistory().size());
-        assertEquals(TaskStatus.IN_PROGRESS, updatedTask.getTaskHistory().get(1).getTask().getStatus());
     }
 
     @Test
@@ -289,6 +286,11 @@ public class TaskManagerServiceImplTest {
     }
 
     @Test
+    public void testUpdateParentTask(){
+
+    }
+
+    @Test
     public void testFetchTaskGraphStraightFlow()
     {
         long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
@@ -388,7 +390,7 @@ public class TaskManagerServiceImplTest {
         BaseDaoImpl baseDaoImpl = injector.getInstance(BaseDaoImpl.class);
         baseDaoImpl.executeQuery("Delete from relation");
         baseDaoImpl.executeQuery("Delete from task_attributes");
-        baseDaoImpl.executeQuery("Delete from task_history");
+        baseDaoImpl.executeQuery("Delete from task_AUD");
         baseDaoImpl.executeQuery("Delete from task");
         baseDaoImpl.executeQuery("Delete from task_group");
         baseDaoImpl.executeQuery("Delete from subject");

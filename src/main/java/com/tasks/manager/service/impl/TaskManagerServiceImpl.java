@@ -43,17 +43,17 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final RelationDao relationDao;
     private final SubjectDao subjectDao;
     private final ActorDao actorDao;
-    private final TaskHistoryDao taskHistoryDao;
     private final StateMachineConfig taskStateMachineConfig;
     private final MessageSender sender;
     private final ObjectMapper objectMapper;
     private String restEnv;
+
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
                                   TaskGroupDao taskGroupDao,
                                   TaskAttributesDao taskAttributesDao,
                                   StateMachineProvider stateMachineProvider, RelationDao relationDao,
-                                  SubjectDao subjectDao, ActorDao actorDao, TaskHistoryDao taskHistoryDao,
+                                  SubjectDao subjectDao, ActorDao actorDao,
                                   @AsyncAnnotation MessageSender sender,
                                   ObjectMapper objectMapper) {
         this.taskDao = taskDao;
@@ -63,13 +63,12 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         this.taskStateMachineConfig = stateMachineProvider.get();
         this.subjectDao = subjectDao;
         this.actorDao = actorDao;
-        this.taskHistoryDao = taskHistoryDao;
         this.sender = sender;
         this.objectMapper = objectMapper;
     }
 
-    public void setRestEnv(String restEnv){
-        this.restEnv=restEnv;
+    public void setRestEnv(String restEnv) {
+        this.restEnv = restEnv;
     }
 
     @Override
@@ -88,7 +87,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         Relation relation = new Relation();
         taskDao.save(task);
-        saveTaskHistory(task);
         relation.setTaskGroup(taskGroup);
         relation.setTask(task);
         if (task.getRelations() == null)
@@ -112,7 +110,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
         taskGroupDao.save(taskGroup);
         for (Task task : tasks) {
-            saveTaskHistory(task);
             publishTaskEvent(task, "");
         }
 
@@ -125,7 +122,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public Task createTaskWithParentTasks(Task task, long tgId, List<Long> parentTaskIds) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         taskDao.save(task);
-        saveTaskHistory(task);
         for (Long parentTaskId : parentTaskIds) {
             Relation relation = new Relation();
             relation.setTaskGroup(taskGroup);
@@ -190,11 +186,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         Task task = fetchTask(taskId);
         updateTaskStateMachine(task, newStatus);
         TaskStatus fromTaskStatus = task.getStatus();
-        TaskHistory taskHistory = new TaskHistory();
-        taskHistory.setTaskStatus(newStatus);
-        taskHistory.setTask(task);
-        task.getTaskHistory().add(taskHistory);
-        taskHistoryDao.save(taskHistory);
         taskDao.updateStatus(taskId, newStatus);
         task.setStatus(newStatus);
         publishTaskEvent(task, fromTaskStatus.name());
@@ -279,6 +270,26 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return task;
     }
 
+    @Override
+    public void updateParentTask(Task task, Long parentTaskId) {
+        for (Relation relation : task.getRelations()) {
+            if (relation.getParentTaskId() == null) {
+                relation.setParentTaskId(parentTaskId);
+                relationDao.save(relation);
+                break;
+            }
+        }
+    }
+
+    @Override
+    public List<Task> getTasksforSubject(Long subjectId) {
+        SearchDto searchDto = new SearchDto();
+        Subject subject = new Subject();
+        subject.setId(subjectId);
+        searchDto.setSubject(subject);
+        return taskDao.search(searchDto);
+    }
+
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
         DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
         List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
@@ -309,11 +320,13 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         List<Task> parentTasks = new ArrayList<>();
         for (Relation eachRelation : relations) {
             if (eachRelation.getTask().getId() == task.getId()) {
-                long parentTaskId = eachRelation.getParentTaskId();
-                for (Task eachTask : tasks) {
-                    if (eachTask.getId().longValue() == parentTaskId) {
-                        parentTasks.add(eachTask);
-                        break;
+                Long parentTaskId = eachRelation.getParentTaskId();
+                if (parentTaskId != null) {
+                    for (Task eachTask : tasks) {
+                        if (eachTask.getId().longValue() == parentTaskId) {
+                            parentTasks.add(eachTask);
+                            break;
+                        }
                     }
                 }
             }
@@ -321,17 +334,10 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return parentTasks;
     }
 
-    private void saveTaskHistory(Task task) {
-        TaskHistory taskHistory = new TaskHistory();
-        taskHistory.setTask(task);
-        taskHistory.setTaskStatus(task.getStatus());
-        task.getTaskHistory().add(taskHistory);
-        taskHistoryDao.save(taskHistory);
-    }
-
     private void publishTaskEvent(Task task, String fromTaskStatus) {
         try {
-            Event event = new Event("TaskEvent", this.objectMapper.writeValueAsString(Utils.getTaskEvent(task, fromTaskStatus)));
+            Event event = new Event("TaskEvent", objectMapper.writeValueAsString(Utils.getTaskEvent(task, fromTaskStatus)));
+            // need to change below:
             event.setExchangeName(this.restEnv + ".XXX.YYY.ZZZ");
             event.setExchangeType("topic");
             sender.publish(event);

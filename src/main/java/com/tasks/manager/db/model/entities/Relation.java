@@ -34,9 +34,8 @@ public class Relation extends BaseEntity {
     @JsonIdentityReference(alwaysAsId = true)
     private Task task;
 
-    @NotNull
     @Column(name = "parent_task_id")
     @JsonProperty(value = "parent_task_id")
-    private long parentTaskId;
+    private Long parentTaskId;
 
 }

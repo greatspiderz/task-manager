@@ -1,5 +1,6 @@
 package com.tasks.manager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.casclient.client.HttpAuthClient;
 import com.flipkart.restbus.client.core.MessageReceiver;
 import com.flipkart.restbus.client.core.MessageSender;
@@ -30,7 +31,7 @@ public class BindingClassForTests extends AbstractModule {
         bind(TaskGroupDao.class).to(TaskGroupDaoImpl.class);
         bind(TaskAttributesDao.class).to(TaskAttributesDaoImpl.class);
         bind(SubjectDao.class).to(SubjectDaoImpl.class);
-        bind(TaskHistoryDao.class).to(TaskHistoryDaoImpl.class);
+        bind(ObjectMapper.class);
         bind(HttpAuthClient.class).toProvider(HttpAuthClientProvider.class);
         bind(OutboundMessageRepository.class).to(OutboundMessageDaoJpaImpl.class);
         bind(InboundMessageRepository.class).to(InboundMessageDaoJpaImpl.class);

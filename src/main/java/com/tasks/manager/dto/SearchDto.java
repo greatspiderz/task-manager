@@ -1,6 +1,7 @@
 package com.tasks.manager.dto;
 
 import com.tasks.manager.db.model.entities.Actor;
+import com.tasks.manager.db.model.entities.Subject;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import lombok.Data;
 
@@ -14,6 +15,7 @@ public class SearchDto {
     String type;
     Integer level;
     Actor actor;
+    Subject subject;
     private Integer firstResult;
     private Integer maxResults;
 

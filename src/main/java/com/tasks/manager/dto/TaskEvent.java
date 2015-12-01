@@ -3,7 +3,6 @@ package com.tasks.manager.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.dropwizard.jackson.JsonSnakeCase;
 import lombok.Data;
 import org.joda.time.DateTime;
 
@@ -11,7 +10,6 @@ import org.joda.time.DateTime;
  * Created by shlok.chaurasia on 28/11/15.
  */
 @Data
-@JsonSnakeCase
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskEvent {
 

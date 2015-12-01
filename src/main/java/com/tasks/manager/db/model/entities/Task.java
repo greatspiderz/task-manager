@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.envers.Audited;
 import org.joda.time.DateTime;
 
 import javax.persistence.*;
@@ -25,6 +26,7 @@ import java.util.List;
 public class Task extends BaseEntity{
 
     @NotNull
+    @Audited
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private TaskStatus status = TaskStatus.NEW;
@@ -68,10 +70,5 @@ public class Task extends BaseEntity{
     @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "relation")
     private List<Relation> relations;
-
-    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonProperty(value = "task_history")
-    // Use Enver here for auditing
-    private List<TaskHistory> taskHistory = new ArrayList<>();
 
 }

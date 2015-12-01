@@ -50,5 +50,7 @@ public interface TaskManagerService {
     DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId);
     TaskGroup saveTasks(TaskGroup taskGroup);
     TaskGroup getTaskGroupForTask(Task task);
+    void updateParentTask(Task task, Long parentTaskId);
+    List<Task> getTasksforSubject(Long subjectId);
 
 }

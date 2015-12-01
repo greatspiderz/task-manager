@@ -1,4 +1,4 @@
-version = '0.0.14-SNAPSHOT'
+version = '0.0.15-SNAPSHOT'
 
 // This is root project gradle file, it has no code only sub projects, sub projects have java code.
 apply plugin: 'java'
@@ -36,6 +36,7 @@ allprojects {
         compile group: 'com.google.inject.extensions', name: 'guice-multibindings', version: '3.0'
         compile 'com.google.guava:guava:15.0'
         compile 'org.jgrapht:jgrapht-core:0.9.1'
+        compile 'org.hibernate:hibernate-envers:4.3.11.Final'
         compile('com.fquick:fquick-hibernate-restbus-plugin:1.0.6-SNAPSHOT') {
             exclude group: 'javax.ws.rs', module: 'javax.ws.rs-api'
         }
@@ -73,5 +74,5 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'task-manager'
-    version = '0.0.14-SNAPSHOT'
+    version = '0.0.15-SNAPSHOT'
 }
