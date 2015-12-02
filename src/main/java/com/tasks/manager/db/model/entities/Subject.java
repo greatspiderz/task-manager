@@ -2,6 +2,7 @@ package com.tasks.manager.db.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.jackson.JsonSnakeCase;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,6 +19,7 @@ import java.util.List;
 @Table(name = "subject")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper=true, exclude = {"associatedTasks"})
+@JsonSnakeCase
 public class Subject extends BaseEntity{
     @Column(name = "type")
     private String type;
