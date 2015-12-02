@@ -45,8 +45,8 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final ActorDao actorDao;
     private final StateMachineConfig taskStateMachineConfig;
     private final MessageSender sender;
-    private final ObjectMapper objectMapper;
     private String restEnv;
+    private ObjectMapper objectMapper;
 
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
@@ -54,8 +54,8 @@ public class TaskManagerServiceImpl implements TaskManagerService {
                                   TaskAttributesDao taskAttributesDao,
                                   StateMachineProvider stateMachineProvider, RelationDao relationDao,
                                   SubjectDao subjectDao, ActorDao actorDao,
-                                  @AsyncAnnotation MessageSender sender,
-                                  ObjectMapper objectMapper) {
+                                  @AsyncAnnotation MessageSender sender
+                                  ) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
@@ -64,7 +64,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         this.subjectDao = subjectDao;
         this.actorDao = actorDao;
         this.sender = sender;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper();
     }
 
     public void setRestEnv(String restEnv) {
