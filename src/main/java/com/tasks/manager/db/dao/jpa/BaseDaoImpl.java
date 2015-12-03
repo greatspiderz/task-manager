@@ -35,6 +35,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public void save(T entity) {
         EntityManager em = getEntityManager();
         if (em.contains(entity) ) {
@@ -47,6 +48,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public <T extends BaseEntity> List<T> bulkInsert(List<T> entities) {
         final List<T> savedEntities = new ArrayList<>(entities.size());
         EntityManager entityManager = getEntityManager();
@@ -73,6 +75,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
     }
 
     @Override
+    @Transactional
     public T fetchById(final long id) {
         EntityManager em = getEntityManager();
         T entity = em.find(getEntityClass(), id);
