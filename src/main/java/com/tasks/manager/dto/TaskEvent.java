@@ -58,9 +58,9 @@ public class TaskEvent {
     @JsonProperty(value = "event_date_in_millis")
     private Long eventDateInMillis;
 
-    public void setEventDateInMillis(Long eventDateInMillis) {
-        this.eventDateInMillis = eventDateInMillis;
-        this.eventDate = new DateTime(eventDateInMillis);
+    public void setEventDate(DateTime eventDate) {
+        this.eventDate = eventDate;
+        this.eventDateInMillis = eventDate.getMillis();
     }
 }
 
