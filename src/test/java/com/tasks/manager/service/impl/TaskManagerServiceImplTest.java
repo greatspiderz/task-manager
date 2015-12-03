@@ -45,7 +45,6 @@ public class TaskManagerServiceImplTest {
         transaction.getEntityManager().getTransaction().begin();
         emptyDatabases();
         taskManagerService = injector.getInstance(TaskManagerServiceImpl.class);
-        this.taskManagerService.setRestEnv("testEnv");
         defaultDateTime = DateTime.parse("2015-10-09");
         defaultTaskStatus = TaskStatus.NEW;
         defaultTaskType = "PICK";

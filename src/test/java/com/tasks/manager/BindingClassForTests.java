@@ -8,16 +8,22 @@ import com.flipkart.restbus.client.repository.InboundMessageRepository;
 import com.flipkart.restbus.client.repository.OutboundMessageRepository;
 import com.fquick.resthibernateplugin.core.annotations.AsyncAnnotation;
 import com.fquick.resthibernateplugin.core.annotations.SyncAnnotation;
+import com.fquick.resthibernateplugin.core.configs.RestBusConfig;
 import com.fquick.resthibernateplugin.core.providers.*;
 import com.fquick.resthibernateplugin.db.dao.jpa.restbus.InboundMessageDaoJpaImpl;
 import com.fquick.resthibernateplugin.db.dao.jpa.restbus.OutboundMessageDaoJpaImpl;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.persist.UnitOfWork;
 //import com.restbus.client.plugin.dropwizard.filter.jersey.IdempotencyFilter;
 //import com.restbus.lock.client.Lock;
 import com.tasks.manager.db.dao.interfaces.*;
 import com.tasks.manager.db.dao.jpa.*;
+import com.tasks.manager.service.api.EventPublisher;
 import com.tasks.manager.service.api.TaskManagerService;
+import com.tasks.manager.service.impl.EventPublisherImpl;
 import com.tasks.manager.service.impl.TaskManagerServiceImpl;
 
 /**
@@ -38,6 +44,6 @@ public class BindingClassForTests extends AbstractModule {
         bind(MessageReceiver.class).toProvider(MessageReceiverProvider.class);
         bind(MessageSender.class).annotatedWith(AsyncAnnotation.class).toProvider(AsyncMessageSenderProvider.class);
         bind(MessageSender.class).annotatedWith(SyncAnnotation.class).toProvider(SyncMessageSenderProvider.class);
+        bind(EventPublisher.class).to(EventPublisherImpl.class);
     }
-
 }

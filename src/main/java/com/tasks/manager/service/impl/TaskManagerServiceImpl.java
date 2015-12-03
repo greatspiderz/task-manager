@@ -1,9 +1,5 @@
 package com.tasks.manager.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flipkart.restbus.client.core.MessageSender;
-import com.flipkart.restbus.client.entity.Event;
-import com.fquick.resthibernateplugin.core.annotations.AsyncAnnotation;
 import com.github.oxo42.stateless4j.StateMachine;
 import com.github.oxo42.stateless4j.StateMachineConfig;
 import com.google.inject.Inject;
@@ -14,12 +10,12 @@ import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import com.tasks.manager.dto.TaskGraphEdge;
+import com.tasks.manager.enums.TaskEventType;
+import com.tasks.manager.service.api.EventPublisher;
 import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
-import com.tasks.manager.util.Utils;
+import com.tasks.manager.util.EventUtils;
 import lombok.extern.slf4j.Slf4j;
-
-import com.google.inject.persist.Transactional;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,9 +40,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     private final SubjectDao subjectDao;
     private final ActorDao actorDao;
     private final StateMachineConfig taskStateMachineConfig;
-    private final MessageSender sender;
-    private String restEnv;
-    private ObjectMapper objectMapper;
+    private final EventPublisher eventPublisher;
 
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
@@ -54,8 +48,8 @@ public class TaskManagerServiceImpl implements TaskManagerService {
                                   TaskAttributesDao taskAttributesDao,
                                   StateMachineProvider stateMachineProvider, RelationDao relationDao,
                                   SubjectDao subjectDao, ActorDao actorDao,
-                                  @AsyncAnnotation MessageSender sender
-                                  ) {
+                                  EventPublisher eventPublisher
+    ) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
         this.taskAttributesDao = taskAttributesDao;
@@ -63,12 +57,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         this.taskStateMachineConfig = stateMachineProvider.get();
         this.subjectDao = subjectDao;
         this.actorDao = actorDao;
-        this.sender = sender;
-        this.objectMapper = new ObjectMapper();
-    }
-
-    public void setRestEnv(String restEnv) {
-        this.restEnv = restEnv;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -96,7 +85,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         task.getRelations().add(relation);
         taskGroup.getRelations().add(relation);
         relationDao.save(relation);
-        publishTaskEvent(task, "");
+        eventPublisher.publishTaskCreationEvent(task);
         return task;
     }
 
@@ -110,7 +99,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
         taskGroupDao.save(taskGroup);
         for (Task task : tasks) {
-            publishTaskEvent(task, "");
+            eventPublisher.publishTaskCreationEvent(task);
         }
 
         taskDao.bulkInsert(tasks);
@@ -161,9 +150,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException {
         createActor(actor);
+        Actor oldActor = taskDao.fetchById(taskId).getActor();
         taskDao.updateTaskActor(taskId, actor);
         Task task = taskDao.fetchById(taskId);
         actor.getAssociatedTasks().add(task);
+        eventPublisher.publishActorAssignmentEvent(task, oldActor);
     }
 
     @Override
@@ -188,7 +179,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         TaskStatus fromTaskStatus = task.getStatus();
         taskDao.updateStatus(taskId, newStatus);
         task.setStatus(newStatus);
-        publishTaskEvent(task, fromTaskStatus.name());
+        eventPublisher.publishTaskStatusChangeEvent(task, fromTaskStatus);
     }
 
     private void updateTaskStateMachine(Task task, TaskStatus newStatus) {
@@ -332,17 +323,5 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             }
         }
         return parentTasks;
-    }
-
-    private void publishTaskEvent(Task task, String fromTaskStatus) {
-        try {
-            Event event = new Event("TaskEvent", objectMapper.writeValueAsString(Utils.getTaskEvent(task, fromTaskStatus)));
-            // need to change below:
-            event.setExchangeName(this.restEnv + ".XXX.YYY.ZZZ");
-            event.setExchangeType("topic");
-            sender.publish(event);
-        } catch (IOException e) {
-            log.error("Exception found while publishing event to RestBus", e.getMessage());
-        }
     }
 }
