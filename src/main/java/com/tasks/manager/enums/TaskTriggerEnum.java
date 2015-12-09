@@ -6,6 +6,7 @@ package com.tasks.manager.enums;
 public enum TaskTriggerEnum {
     CANCEL,
     COMPLETE,
+    IN_PROGRESS,
     IN_COMPLETE,
     START;
 

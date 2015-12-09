@@ -9,6 +9,7 @@ import com.tasks.manager.db.model.entities.TaskGroup;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import com.tasks.manager.dto.TaskGraphEdge;
+import com.tasks.manager.enums.TaskTriggerEnum;
 import com.tasks.manager.service.impl.TaskManagerServiceImpl;
 import org.jgrapht.DirectedGraph;
 
@@ -37,7 +38,7 @@ public interface TaskManagerService {
     Actor fetchActor(Long actorId);
     void updateSubject(Long taskId, Subject subject) throws TaskNotFoundException;
 
-    void updateStatus( Long taskId, TaskStatus newStatus) throws TaskNotFoundException;
+    void updateStatus( Long taskId, TaskTriggerEnum triggerEnum) throws TaskNotFoundException;
 
     void updateETA( Long taskId, Long eta) throws TaskNotFoundException;
 

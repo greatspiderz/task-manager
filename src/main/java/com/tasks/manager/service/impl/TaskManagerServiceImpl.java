@@ -11,6 +11,7 @@ import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import com.tasks.manager.dto.TaskGraphEdge;
 import com.tasks.manager.enums.TaskEventType;
+import com.tasks.manager.enums.TaskTriggerEnum;
 import com.tasks.manager.service.api.EventPublisher;
 import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
@@ -173,20 +174,20 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateStatus(Long taskId, TaskStatus newStatus) throws TaskNotFoundException {
+    public void updateStatus(Long taskId, TaskTriggerEnum trigger) throws TaskNotFoundException {
         Task task = fetchTask(taskId);
-        updateTaskStateMachine(task, newStatus);
+        TaskStatus newStatus = updateTaskStateMachine(task, trigger);
         TaskStatus fromTaskStatus = task.getStatus();
         taskDao.updateStatus(taskId, newStatus);
         task.setStatus(newStatus);
         eventPublisher.publishTaskStatusChangeEvent(task, fromTaskStatus);
     }
 
-    private void updateTaskStateMachine(Task task, TaskStatus newStatus) {
-        log.info("updating status of task " + task.getId() + " with trigger " + newStatus);
-        StateMachine<TaskStatus, TaskStatus> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
-        stateMachine.fire(newStatus);
-        task.setStatus(newStatus);
+    private TaskStatus updateTaskStateMachine(Task task, TaskTriggerEnum trigger) {
+        log.info("updating status of task " + task.getId() + " with trigger " + trigger);
+        StateMachine<TaskStatus, TaskTriggerEnum> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
+        stateMachine.fire(trigger);
+        return stateMachine.getState();
     }
 
     @Override

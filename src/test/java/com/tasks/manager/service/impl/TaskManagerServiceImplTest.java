@@ -3,6 +3,7 @@ package com.tasks.manager.service.impl;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.persist.PersistService;
+import com.google.inject.persist.Transactional;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.tasks.manager.BindingClassForTests;
 import com.tasks.manager.db.dao.jpa.BaseDaoImpl;
@@ -11,6 +12,7 @@ import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import com.tasks.manager.dto.TaskGraphEdge;
+import com.tasks.manager.enums.TaskTriggerEnum;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Assert;
@@ -124,18 +126,18 @@ public class TaskManagerServiceImplTest {
     public void testUpdateTaskStatus(){
         long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
-        TaskStatus newStatus = TaskStatus.IN_PROGRESS;
+        TaskTriggerEnum triggerEnum = TaskTriggerEnum.IN_PROGRESS;
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
         List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
         Task task = taskManagerService.fetchTask(taskList.get(0).getId());
         try{
-            taskManagerService.updateStatus(task.getId(), newStatus);
+            taskManagerService.updateStatus(task.getId(), triggerEnum);
         }
         catch(TaskNotFoundException e){
             fail("Exception thrown on updating actor");
         }
         Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertEquals(newStatus, updatedTask.getStatus());
+        assertEquals(TaskStatus.IN_PROGRESS, updatedTask.getStatus());
     }
 
     @Test
@@ -362,6 +364,7 @@ public class TaskManagerServiceImplTest {
 
     }
 
+    @Transactional(rollbackOn = Exception.class)
     private long createTestTaskGroupWithTask(String attributeName, String attributeValue, TaskStatus status, String type)
     {
         TaskAttributes ta = new TaskAttributes();
