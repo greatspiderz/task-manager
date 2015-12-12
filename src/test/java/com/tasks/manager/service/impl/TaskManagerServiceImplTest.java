@@ -223,6 +223,26 @@ public class TaskManagerServiceImplTest {
     }
 
     @Test
+    public void testSearchTasksForActor(){
+        TaskGroup taskGroup = new TaskGroup();
+        taskGroup = taskManagerService.createTaskGroup(taskGroup);
+        Task task = new Task();
+        task.setType("HAND_SHAKE");
+        Actor actor = new Actor();
+        actor.setExternalId("hero123");
+        actor.setType("HERO");
+        task.setActor(actor);
+        taskManagerService.createTask(task, taskGroup.getId());
+        TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
+
+        SearchDto searchDto = new SearchDto();
+        searchDto.setActor(actor);
+        List<Task> tasks = taskManagerService.findTasks(searchDto);
+        assertEquals(1, tasks.size());
+        assertEquals(tasks.get(0).getType(),"HAND_SHAKE");
+    }
+
+    @Test
     public void testFetchParentTask(){
         long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
