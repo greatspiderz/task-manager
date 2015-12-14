@@ -27,6 +27,10 @@ public class StateMachineProvider implements Provider<StateMachineConfig> {
         taskStateMachineConfig.configure(TaskStatus.IN_PROGRESS)
                 .permit(TaskTriggerEnum.COMPLETE, TaskStatus.COMPLETED);
 
+        taskStateMachineConfig.configure(TaskStatus.IN_PROGRESS)
+                .permit(TaskTriggerEnum.IN_COMPLETE, TaskStatus.INCOMPLETED);
+
+
         /* from completed */
         taskStateMachineConfig.configure(TaskStatus.COMPLETED)
                 .permit(TaskTriggerEnum.CANCEL, TaskStatus.CANCELLED);
