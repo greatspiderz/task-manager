@@ -102,6 +102,30 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         return taskResults;
     }
 
+    public List<Task> searchActiveTasksForActor(SearchDto searchDto){
+        StringBuilder queryString = new StringBuilder("FROM Task t WHERE status IN (:statuses)");
+        ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
+        List<TaskStatus> activeStatuses = new ArrayList<>();
+        activeStatuses.add(TaskStatus.NEW);
+        activeStatuses.add(TaskStatus.IN_PROGRESS);
+        namedParamMapBuilder.put("statuses", activeStatuses);
+        List<String> queryParamStringList = new ArrayList<>();
+        if(searchDto.getActor()!=null)
+        {
+            queryString.append(" and ");
+            queryParamStringList.add("actor_id = :actor_id");
+            namedParamMapBuilder.put("actor_id", searchDto.getActor().getId());
+        }
+        ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
+        queryString.append(String.join( " and ", queryParamStringList));
+        List<Task> taskResults = new ArrayList<>();
+        if(namedParamMap.size() > 0) {
+            taskResults = findByQueryAndNamedParams(searchDto.getFirstResult(), searchDto.getMaxResults(),
+                    queryString.toString(), namedParamMap);
+        }
+        return taskResults;
+    }
+
     public List<Task> getAll(List<Long> taskIds)
     {
         Criterion listIdsCriterion = Restrictions.in("id", taskIds);

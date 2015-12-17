@@ -282,6 +282,15 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.search(searchDto);
     }
 
+    @Override
+    public List<Task> getActiveTasksforActor(Long actorId){
+        SearchDto searchDto = new SearchDto();
+        Actor actor = new Actor();
+        actor.setId(actorId);
+        searchDto.setActor(actor);
+        return taskDao.searchActiveTasksForActor(searchDto);
+    }
+
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
         DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
         List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
