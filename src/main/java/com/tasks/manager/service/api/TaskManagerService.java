@@ -54,5 +54,6 @@ public interface TaskManagerService {
     void updateParentTask(Task task, Long parentTaskId);
     List<Task> getTasksforSubject(String subjectExternalId);
     List<Task> getActiveTasksforActor(Long actorId);
+    List<Task> getActiveTasksforActorByExternalId(String actorExternalId);
     List<Task> bulkInsertTasks(List<Task> tasks);
 }

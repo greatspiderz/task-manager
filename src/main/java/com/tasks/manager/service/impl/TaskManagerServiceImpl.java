@@ -290,6 +290,18 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         searchDto.setActor(actor);
         return taskDao.searchActiveTasksForActor(searchDto);
     }
+    @Override
+    public List<Task> getActiveTasksforActorByExternalId(String actorExternalId){
+        Actor actorSearched = actorDao.fetchByExternalId(actorExternalId);
+        if(actorSearched==null)
+            return null;
+        Long actorId = actorSearched.getId();
+        SearchDto searchDto = new SearchDto();
+        Actor actor = new Actor();
+        actor.setId(actorId);
+        searchDto.setActor(actor);
+        return taskDao.searchActiveTasksForActor(searchDto);
+    }
 
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
         DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);

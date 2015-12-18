@@ -11,4 +11,5 @@ import com.tasks.manager.db.model.entities.Relation;
 @ImplementedBy(ActorDaoImpl.class)
 public interface ActorDao extends BaseDao<Actor>{
     void updateActorStatus(Long id, String status);
+    Actor fetchByExternalId(String externalId);
 }

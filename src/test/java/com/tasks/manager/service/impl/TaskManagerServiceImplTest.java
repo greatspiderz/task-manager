@@ -236,6 +236,33 @@ public class TaskManagerServiceImplTest {
     }
 
     @Test
+    public void testGetTaskForActorByExternalId(){
+        Long taskgrp1 =createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        Long taskgrp2 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        Long taskgrp3 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        TaskGroup taskGrp1 = taskManagerService.fetchTaskGroup(taskgrp1);
+        TaskGroup taskGrp2 = taskManagerService.fetchTaskGroup(taskgrp2);
+        Actor actor = new Actor();
+        actor.setStatus("ASSIGNED");
+        actor.setType("HERO");
+        actor.setExternalId("FQWE123");
+        Actor createdActor = taskManagerService.createActor(actor);
+        try {
+            taskManagerService.updateTaskActor(taskManagerService.getTasksForTaskGroup(taskGrp1.getId()).get(0).getId(), createdActor);
+            taskManagerService.updateTaskActor(taskManagerService.getTasksForTaskGroup(taskGrp2.getId()).get(0).getId(), createdActor);
+        }
+        catch(TaskNotFoundException e)
+        {
+            fail("Exception occured while updating task actor");
+        }
+        List<Task> activeTasks = taskManagerService.getActiveTasksforActorByExternalId(createdActor.getExternalId());
+        assertEquals(2, activeTasks.size());
+    }
+
+    @Test
     public void testCreateTask(){
         TaskGroup taskGroup = new TaskGroup();
         taskGroup = taskManagerService.createTaskGroup(taskGroup);
