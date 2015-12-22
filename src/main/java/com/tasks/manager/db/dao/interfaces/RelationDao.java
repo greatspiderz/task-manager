@@ -14,5 +14,5 @@ import java.util.List;
 public interface RelationDao extends BaseDao<Relation> {
     List<Relation> fetchByTaskGroupId(long taskGroupId);
     List<Relation> fetchByTaskId(long taskId);
-
+    List<Relation> fetchByParentTaskId(Long taskId);
 }

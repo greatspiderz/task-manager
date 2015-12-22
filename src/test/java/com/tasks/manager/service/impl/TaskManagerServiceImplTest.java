@@ -294,7 +294,61 @@ public class TaskManagerServiceImplTest {
         assertEquals(1, tasks.size());
         assertEquals(tasks.get(0).getType(),"HAND_SHAKE");
     }
+    @Test
+    public void testcancelAllChildTasks(){
+        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+        List<Task> taskList = taskManagerService.getTasksForTaskGroup(taskGroup.getId());
 
+        Task parentTask = taskList.get(0);
+
+        Task handShakeTask = new Task();
+        handShakeTask.setType("HAND_SHAKE");
+        handShakeTask.setStatus(TaskStatus.NEW);
+        List<Long> parentIds = new ArrayList<>();
+        parentIds.add(parentTask.getId());
+        taskManagerService.createTaskWithParentTasks(handShakeTask, createdTaskGroupId, parentIds);
+
+
+
+        Task travelTask1 = new Task();
+        travelTask1.setType("TRAVEL");
+        travelTask1.setStatus(TaskStatus.NEW);
+        parentIds = new ArrayList<>();
+        parentIds.add(handShakeTask.getId());
+        taskManagerService.createTaskWithParentTasks(travelTask1, createdTaskGroupId, parentIds);
+
+
+        Task travelTask2 = new Task();
+        travelTask2.setType("TRAVEL");
+        travelTask2.setStatus(TaskStatus.NEW);
+        parentIds = new ArrayList<>();
+        parentIds.add(handShakeTask.getId());
+        taskManagerService.createTaskWithParentTasks(travelTask2, createdTaskGroupId, parentIds);
+
+
+        Task deliver = new Task();
+        deliver.setType("DELIVER");
+        deliver.setStatus(TaskStatus.NEW);
+        parentIds = new ArrayList<>();
+        parentIds.add(travelTask1.getId());
+        parentIds.add(travelTask2.getId());
+        taskManagerService.createTaskWithParentTasks(deliver, createdTaskGroupId, parentIds);
+
+        SearchDto searchDto = new SearchDto();
+        searchDto.setStatus(TaskStatus.NEW);
+        List<Task> tasksBeforeCancellation = taskManagerService.findTasks(searchDto);
+        taskManagerService.cancelAllChildTasks(handShakeTask);
+        searchDto.setStatus(TaskStatus.NEW);
+        List<Task> tasksAfterCancellation = taskManagerService.findTasks(searchDto);
+        searchDto.setStatus(TaskStatus.CANCELLED);
+        List<Task> tasksCancelled = taskManagerService.findTasks(searchDto);
+
+        assertEquals(3, tasksCancelled.size());
+        assertEquals(5, tasksBeforeCancellation.size());
+        assertEquals(2, tasksAfterCancellation.size());
+    }
     @Test
     public void testFetchParentTask(){
         long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
@@ -469,6 +523,7 @@ public class TaskManagerServiceImplTest {
         baseDaoImpl.executeQuery("Delete from task");
         baseDaoImpl.executeQuery("Delete from task_group");
         baseDaoImpl.executeQuery("Delete from subject");
+        baseDaoImpl.executeQuery("Delete from actor");
         baseDaoImpl.executeQuery("Delete from inbound_messages");
         baseDaoImpl.executeQuery("Delete from outbound_messages");
     }

@@ -303,6 +303,31 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.searchActiveTasksForActor(searchDto);
     }
 
+    public void cancelAllChildTasks(Task task)
+    {
+        List<Relation> relations = relationDao.fetchByParentTaskId(task.getId());
+        if(relations.size() > 0){
+            List<Long> taskIds = new ArrayList<>();
+            for(Relation relation: relations){
+                taskIds.add(relation.getTask().getId());
+            }
+
+            List<Task> childTasks = taskDao.getAll(taskIds);
+            for(Task taskToCancel: childTasks){
+                if(taskToCancel.getStatus() != TaskStatus.CANCELLED){
+                    try{
+                        taskDao.updateStatus(taskToCancel.getId(), TaskStatus.CANCELLED);
+                    }
+                    catch(TaskNotFoundException e)
+                    {
+                        log.error("No Task found for id : " + taskToCancel.getId() +" check again!");
+                    }
+                    cancelAllChildTasks(taskToCancel);
+                }
+            }
+        }
+    }
+
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
         DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
         List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
