@@ -10,5 +10,5 @@ import com.tasks.manager.db.model.entities.Subject;
  */
 @ImplementedBy(SubjectDaoImpl.class)
 public interface SubjectDao extends BaseDao<Subject>{
-
+    Subject fetchByExternalId(String externalId);
 }

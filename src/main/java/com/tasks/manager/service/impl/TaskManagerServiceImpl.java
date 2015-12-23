@@ -303,6 +303,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.searchActiveTasksForActor(searchDto);
     }
 
+    @Override
     public void cancelAllChildTasks(Task task)
     {
         List<Relation> relations = relationDao.fetchByParentTaskId(task.getId());
@@ -326,6 +327,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
                 }
             }
         }
+    }
+
+    @Override
+    public Subject fetchSubjectByExternalId(String externalId){
+        return subjectDao.fetchByExternalId(externalId);
     }
 
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {

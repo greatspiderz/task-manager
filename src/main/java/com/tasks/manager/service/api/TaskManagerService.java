@@ -57,4 +57,5 @@ public interface TaskManagerService {
     List<Task> getActiveTasksforActorByExternalId(String actorExternalId);
     List<Task> bulkInsertTasks(List<Task> tasks);
     void cancelAllChildTasks(Task task);
+    Subject fetchSubjectByExternalId(String externalId);
 }

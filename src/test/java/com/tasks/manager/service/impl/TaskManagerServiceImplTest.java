@@ -413,10 +413,6 @@ public class TaskManagerServiceImplTest {
         assertEquals(taskGroup.getId(), createdTaskGroupId);
     }
 
-    @Test
-    public void testUpdateParentTask(){
-
-    }
 
     @Test
     public void testFetchTaskGraphStraightFlow()
@@ -489,6 +485,28 @@ public class TaskManagerServiceImplTest {
         }
 
 
+    }
+
+    @Test
+    public void testFetchSubjectByExternalId(){
+        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+                defaultTaskStatus, defaultTaskType);
+        String subjectType = "Shipment";
+        Subject subject = new Subject();
+        subject.setType(subjectType);
+        subject.setExternalId("S1112233");
+        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
+        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
+        try{
+            taskManagerService.updateSubject(task.getId(), subject);
+        }
+        catch(TaskNotFoundException e){
+            fail("Exception thrown on updating subject");
+        }
+        Subject updatedSubject = taskManagerService.fetchSubjectByExternalId("S1112233");
+        Assert.assertNotNull(updatedSubject);
+        Assert.assertEquals("S1112233", updatedSubject.getExternalId());
     }
 
     @Transactional(rollbackOn = Exception.class)

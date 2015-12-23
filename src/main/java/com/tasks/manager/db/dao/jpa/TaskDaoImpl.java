@@ -106,7 +106,6 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         StringBuilder queryString = new StringBuilder("FROM Task t WHERE status IN (:statuses)");
         ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
         List<TaskStatus> activeStatuses = new ArrayList<>();
-        activeStatuses.add(TaskStatus.NEW);
         activeStatuses.add(TaskStatus.IN_PROGRESS);
         namedParamMapBuilder.put("statuses", activeStatuses);
         List<String> queryParamStringList = new ArrayList<>();
