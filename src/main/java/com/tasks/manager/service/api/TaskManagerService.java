@@ -44,7 +44,8 @@ public interface TaskManagerService {
 
     List<Task> findTasks(SearchDto searchdto);
 
-    List<Task> findTasksForAttributes(HashMap<String, String> attibuteNameValue);
+    //revisit
+    //List<Task> findTasksForAttributes(HashMap<String, String> attibuteNameValue);
 
     List<Task> getTasksForTaskGroup(Long taskGroupId);
     Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId);
@@ -57,5 +58,7 @@ public interface TaskManagerService {
     List<Task> getActiveTasksforActorByExternalId(String actorExternalId);
     List<Task> bulkInsertTasks(List<Task> tasks);
     void cancelAllChildTasks(Task task);
+    List<TaskGroup> findActiveTaskgroupsWithAttribute(String attributeName, String attributeValue);
+    TaskGroup fetchTaskGroupBySubjectExternalId(String externalId);
     Subject fetchSubjectByExternalId(String externalId);
 }

@@ -22,5 +22,6 @@ public interface TaskDao extends BaseDao<Task>{
     List<Task> search(SearchDto searchDto);
     List<Task> searchActiveTasksForActor(SearchDto searchDto);
     List<Task> getAll(List<Long> taskIds);
+    List<Task> fetchBySubjectId(Long subjectId);
 
 }

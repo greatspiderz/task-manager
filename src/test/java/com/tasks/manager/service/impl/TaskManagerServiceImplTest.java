@@ -214,7 +214,7 @@ public class TaskManagerServiceImplTest {
         Long taskgrp1 =createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
         Long taskgrp2 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
+                TaskStatus.IN_PROGRESS, defaultTaskType);
         Long taskgrp3 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
         TaskGroup taskGrp1 = taskManagerService.fetchTaskGroup(taskgrp1);
@@ -232,15 +232,15 @@ public class TaskManagerServiceImplTest {
             fail("Exception occured while updating task actor");
         }
         List<Task> activeTasks = taskManagerService.getActiveTasksforActor(createdActor.getId());
-        assertEquals(2, activeTasks.size());
+        assertEquals(1, activeTasks.size());
     }
 
     @Test
     public void testGetTaskForActorByExternalId(){
         Long taskgrp1 =createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
+                TaskStatus.IN_PROGRESS, defaultTaskType);
         Long taskgrp2 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
+                TaskStatus.IN_PROGRESS, defaultTaskType);
         Long taskgrp3 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
         TaskGroup taskGrp1 = taskManagerService.fetchTaskGroup(taskgrp1);
@@ -262,6 +262,13 @@ public class TaskManagerServiceImplTest {
         assertEquals(2, activeTasks.size());
     }
 
+    @Test
+    public void testfindActiveTaskgroupsWithAttribute(){
+        Long taskgrp1 =createTestTaskGroupWithTask("shipmentID","S1232",
+                TaskStatus.NEW, defaultTaskType);
+        List<TaskGroup> taskgrps = taskManagerService.findActiveTaskgroupsWithAttribute("shipmentID", "S1232");
+        assertEquals(1, taskgrps.size());
+    }
     @Test
     public void testCreateTask(){
         TaskGroup taskGroup = new TaskGroup();

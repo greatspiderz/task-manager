@@ -22,11 +22,10 @@ public class TaskAttributesDaoImpl extends BaseDaoImpl<TaskAttributes> implement
         entityClass = TaskAttributes.class;
     }
 
-    //TODO : Not sure whether this will be needed.
-    public List<TaskAttributes> findTaskAttributes(HashMap<String, String> attibuteNameValue)
+    public List<TaskAttributes> findTaskAttributes(String attributeName, String attributeValue)
     {
-        Criterion keyCriterion = Restrictions.in("attributeName", attibuteNameValue.keySet());
-        Criterion valueCriterion = Restrictions.in("attributeValue", attibuteNameValue.values());
+        Criterion keyCriterion = Restrictions.eq("attributeName", attributeName);
+        Criterion valueCriterion = Restrictions.eq("attributeValue", attributeValue);
         Criterion searchCriterion = Restrictions.and(keyCriterion, valueCriterion);
         return findByCriteria(searchCriterion);
     }

@@ -1,8 +1,6 @@
 package com.tasks.manager.util;
 
-import com.tasks.manager.db.model.entities.Relation;
-import com.tasks.manager.db.model.entities.Task;
-import com.tasks.manager.db.model.entities.TaskGroup;
+import com.tasks.manager.db.model.entities.*;
 
 import java.util.ArrayList;
 
@@ -26,4 +24,23 @@ public class TaskManagerUtility {
         taskGroup.getRelations().add(relation);
         return taskGroup;
     }
+
+    public static Task cloneTaskObject(Task task){
+        Task newTask = new Task();
+        newTask.setStatus(task.getStatus());
+        newTask.setActor(task.getActor());
+        newTask.setSubject(task.getSubject());
+        newTask.setType(task.getType());
+        newTask.setStartTime(task.getStartTime());
+        newTask.setEndTime(task.getEndTime());
+        newTask.setEta(task.getEta());
+        newTask.setDescription(task.getDescription());
+        for(TaskAttributes tskattr: task.getTaskAttributes())
+        {
+            tskattr.setTask(newTask);
+        }
+        newTask.setTaskAttributes(task.getTaskAttributes());
+        return newTask;
+    }
+
 }

@@ -7,6 +7,7 @@ import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.Actor;
 import com.tasks.manager.db.model.entities.Subject;
 import com.tasks.manager.db.model.entities.Task;
+import com.tasks.manager.db.model.entities.TaskGroup;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import org.hibernate.criterion.Criterion;
@@ -123,6 +124,15 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
                     queryString.toString(), namedParamMap);
         }
         return taskResults;
+    }
+
+    @Override
+    public List<Task> fetchBySubjectId(Long subjectId){
+        StringBuilder queryString = new StringBuilder("FROM Task a WHERE subject_id = (:subject_id)");
+        ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
+        namedParamMapBuilder.put("subject_id", subjectId);
+        ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
+        return findByQueryAndNamedParams(null, null, queryString.toString(), namedParamMap);
     }
 
     public List<Task> getAll(List<Long> taskIds)

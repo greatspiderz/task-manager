@@ -12,5 +12,5 @@ import java.util.List;
  */
 @ImplementedBy(TaskAttributesDaoImpl.class)
 public interface TaskAttributesDao extends BaseDao<TaskAttributes> {
-    List<TaskAttributes> findTaskAttributes(HashMap<String, String> attributeNameValue);
+    List<TaskAttributes> findTaskAttributes(String attributeName, String attributeValue);
 }

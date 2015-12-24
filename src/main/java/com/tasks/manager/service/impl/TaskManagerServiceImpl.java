@@ -225,18 +225,19 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.bulkInsert(tasks);
     }
 
-    @Override
-    public List<Task> findTasksForAttributes(HashMap<String, String> attributeNameValue) {
-
-        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeNameValue);
-        Iterator<TaskAttributes> iterator = taskAttributes.iterator();
-        List<Task> tasks = new ArrayList<>();
-        while (iterator.hasNext()) {
-            TaskAttributes taskAttribute = iterator.next();
-            tasks.add(taskAttribute.getTask());
-        }
-        return tasks;
-    }
+    //todo revisit
+//    @Override
+//    public List<Task> findTasksForAttributes(HashMap<String, String> attributeNameValue) {
+//
+//        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeNameValue);
+//        Iterator<TaskAttributes> iterator = taskAttributes.iterator();
+//        List<Task> tasks = new ArrayList<>();
+//        while (iterator.hasNext()) {
+//            TaskAttributes taskAttribute = iterator.next();
+//            tasks.add(taskAttribute.getTask());
+//        }
+//        return tasks;
+//    }
 
     public List<Task> fetchParentTasks(long taskId) {
         List<Relation> relations = taskDao.fetchById(taskId).getRelations();
@@ -330,10 +331,39 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
+    public TaskGroup fetchTaskGroupBySubjectExternalId(String externalId){
+        Subject subject =  subjectDao.fetchByExternalId(externalId);
+        List<Task> tasks = taskDao.fetchBySubjectId(subject.getId());
+        if(tasks.size()>0)
+            return getTaskGroupForTask(tasks.get(0));
+        return null;
+    }
+
+    @Override
     public Subject fetchSubjectByExternalId(String externalId){
         return subjectDao.fetchByExternalId(externalId);
     }
-
+    @Override
+    public List<TaskGroup> findActiveTaskgroupsWithAttribute(String attributeName, String attributeValue){
+        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeName, attributeValue);
+        List<Task> tasks = new ArrayList<>();
+        if(taskAttributes.size()>0){
+            for(TaskAttributes taskAttr:taskAttributes){
+                Task task = taskAttr.getTask();
+                if(!tasks.contains(task) && task.getStatus()!=TaskStatus.CANCELLED ){
+                    tasks.add(task);
+                }
+            }
+        }
+        List<TaskGroup> taskGroups = new ArrayList<>();
+        for(Task taskForAttribute : tasks)
+        {
+            TaskGroup taskGrp = getTaskGroupForTask(taskForAttribute);
+            if(!taskGroups.contains(taskGrp))
+                taskGroups.add(taskGrp);
+        }
+        return taskGroups;
+    }
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
         DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
         List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
