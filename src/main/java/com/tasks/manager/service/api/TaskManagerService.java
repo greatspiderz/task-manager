@@ -60,5 +60,6 @@ public interface TaskManagerService {
     void cancelAllChildTasks(Task task);
     List<TaskGroup> findActiveTaskgroupsWithAttribute(String attributeName, String attributeValue);
     TaskGroup fetchTaskGroupBySubjectExternalId(String externalId);
+    void updateAllActiveTasksStatusInTaskGroup(TaskGroup taskGroup, TaskStatus taskStatus);
     Subject fetchSubjectByExternalId(String externalId);
 }

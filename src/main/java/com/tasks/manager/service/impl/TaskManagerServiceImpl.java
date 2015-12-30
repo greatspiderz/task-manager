@@ -19,10 +19,7 @@ import com.tasks.manager.util.EventUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
@@ -331,6 +328,20 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
+    public void updateAllActiveTasksStatusInTaskGroup(TaskGroup taskGroup, TaskStatus taskStatus)
+    {
+        DirectedGraph<Task,TaskGraphEdge> taskGraph = getTaskGraph(taskGroup.getId());
+        Set<Task> tasks = taskGraph.vertexSet();
+        for(Task task : tasks){
+            if(task.getStatus() != TaskStatus.CANCELLED)
+            {
+                task.setStatus(taskStatus);
+                taskDao.save(task);
+            }
+        }
+    }
+
+    @Override
     public TaskGroup fetchTaskGroupBySubjectExternalId(String externalId){
         Subject subject =  subjectDao.fetchByExternalId(externalId);
         List<Task> tasks = taskDao.fetchBySubjectId(subject.getId());
@@ -364,6 +375,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
         return taskGroups;
     }
+
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
         DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
         List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
