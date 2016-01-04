@@ -302,6 +302,25 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
+    public List<Task> getNextTasksForActor(String actorExternalId, Long completedTaskId)
+    {
+        List<Task> tasksForActor = new ArrayList<>();
+        if(completedTaskId!=null)
+        {
+            List<Relation> relations = relationDao.fetchByParentTaskId(completedTaskId);
+            for(Relation relation:relations)
+            {
+                Task taskForRelation = relation.getTask();
+                if(taskForRelation.getActor().getExternalId().equals(actorExternalId)){
+                    tasksForActor.add(taskForRelation);
+                }
+            }
+
+        }
+        return tasksForActor;
+    }
+
+    @Override
     public void cancelAllChildTasks(Task task)
     {
         List<Relation> relations = relationDao.fetchByParentTaskId(task.getId());

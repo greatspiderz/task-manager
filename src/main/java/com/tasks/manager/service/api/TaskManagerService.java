@@ -56,6 +56,7 @@ public interface TaskManagerService {
     List<Task> getTasksforSubject(String subjectExternalId);
     List<Task> getActiveTasksforActor(Long actorId);
     List<Task> getActiveTasksforActorByExternalId(String actorExternalId);
+    List<Task> getNextTasksForActor(String actorExternalId, Long completedTaskId);
     List<Task> bulkInsertTasks(List<Task> tasks);
     void cancelAllChildTasks(Task task);
     List<TaskGroup> findActiveTaskgroupsWithAttribute(String attributeName, String attributeValue);
