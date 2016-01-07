@@ -24,7 +24,7 @@ public class TaskGroup extends BaseEntity{
 
     @OneToMany(mappedBy = "taskGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "relation")
-    private List<Relation> relations;
+    private List<Relation> relations = new ArrayList<>();
 
     @Column
     @JsonProperty
