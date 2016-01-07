@@ -48,7 +48,7 @@ public interface TaskManagerService {
     //List<Task> findTasksForAttributes(HashMap<String, String> attibuteNameValue);
 
     List<Task> getTasksForTaskGroup(Long taskGroupId);
-    Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId);
+    Task createRelation(Task task, TaskGroup taskGroup, Long parentTaskId);
     DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId);
     TaskGroup saveTasks(TaskGroup taskGroup);
     TaskGroup getTaskGroupForTask(Task task);

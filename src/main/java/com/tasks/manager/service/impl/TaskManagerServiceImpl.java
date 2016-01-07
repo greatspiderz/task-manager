@@ -122,9 +122,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             taskGroup.getRelations().add(relation);
             relationDao.save(relation);
         }
-        for(TaskAttributes taskAttribute: task.getTaskAttributes()){
-            taskAttributesDao.save(taskAttribute);
-        }
         return task;
     }
 
@@ -252,7 +249,8 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return getTaskGraph(taskGroupId);
     }
 
-    public Task createRelation(Task task, TaskGroup taskGroup, long parentTaskId) {
+    @Override
+    public Task createRelation(Task task, TaskGroup taskGroup, Long parentTaskId) {
         Relation relation = new Relation();
         relation.setTaskGroup(taskGroup);
         relation.setTask(task);
