@@ -8,6 +8,7 @@ public enum TaskTriggerEnum {
     COMPLETE,
     IN_PROGRESS,
     IN_COMPLETE,
+    NON_EXECUTABLE,
     START;
 
 }
