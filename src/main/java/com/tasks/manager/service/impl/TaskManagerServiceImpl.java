@@ -122,6 +122,9 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             taskGroup.getRelations().add(relation);
             relationDao.save(relation);
         }
+        for(TaskAttributes taskAttribute: task.getTaskAttributes()){
+            taskAttributesDao.save(taskAttribute);
+        }
         return task;
     }
 
