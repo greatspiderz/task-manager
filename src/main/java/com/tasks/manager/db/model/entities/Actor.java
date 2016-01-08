@@ -28,6 +28,7 @@ public class Actor extends BaseEntity{
     private String status;
 
     @Column(name = "external_id")
+    @JsonProperty(value = "external_id")
     private String externalId;
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

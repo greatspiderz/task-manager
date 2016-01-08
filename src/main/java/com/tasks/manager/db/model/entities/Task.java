@@ -34,14 +34,14 @@ public class Task extends BaseEntity{
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id")
     @JsonProperty(value = "actor_id")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
     @JsonIdentityReference(alwaysAsId = true)
     private Actor actor;
 
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     @JsonProperty(value = "subject_id")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
     @JsonIdentityReference(alwaysAsId = true)
     private Subject subject;
 
