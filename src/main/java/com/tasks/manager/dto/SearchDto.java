@@ -5,6 +5,8 @@ import com.tasks.manager.db.model.entities.Subject;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Created by divya.rai on 05/11/15.
  */
@@ -14,7 +16,7 @@ public class SearchDto {
     TaskStatus status;
     String type;
     Integer level;
-    Actor actor;
+    List<Actor> actors;
     Subject subject;
     private Integer firstResult;
     private Integer maxResults;

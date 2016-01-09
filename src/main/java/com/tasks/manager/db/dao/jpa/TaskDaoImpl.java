@@ -17,6 +17,7 @@ import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by shlok.chaurasia on 05/11/15.
@@ -84,10 +85,10 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
             namedParamMapBuilder.put("type", searchDto.getType());
         }
 
-        if(searchDto.getActor()!=null)
+        if(searchDto.getActors()!=null)
         {
-            queryParamStringList.add("t.actor.externalId = :actor_id");
-            namedParamMapBuilder.put("actor_id", searchDto.getActor().getExternalId());
+            queryParamStringList.add("t.actor.externalId = :actor_ids");
+            namedParamMapBuilder.put("actor_ids", searchDto.getActors().stream().map(actor -> actor.getExternalId()).collect(Collectors.toList()));
         }
         if(searchDto.getSubject()!=null){
             queryParamStringList.add("t.subject.externalId = :subject_id");
@@ -110,11 +111,11 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         activeStatuses.add(TaskStatus.IN_PROGRESS);
         namedParamMapBuilder.put("statuses", activeStatuses);
         List<String> queryParamStringList = new ArrayList<>();
-        if(searchDto.getActor()!=null)
+        if(searchDto.getActors()!=null)
         {
             queryString.append(" and ");
-            queryParamStringList.add("actor_id = :actor_id");
-            namedParamMapBuilder.put("actor_id", searchDto.getActor().getId());
+            queryParamStringList.add("actor_id in :actor_ids");
+            namedParamMapBuilder.put("actor_ids", searchDto.getActors().stream().map(actor -> actor.getId()).collect(Collectors.toList()));
         }
         ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
         queryString.append(String.join( " and ", queryParamStringList));

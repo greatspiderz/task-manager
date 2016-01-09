@@ -286,7 +286,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         SearchDto searchDto = new SearchDto();
         Actor actor = new Actor();
         actor.setId(actorId);
-        searchDto.setActor(actor);
+        searchDto.setActors(Arrays.asList(actor));
         return taskDao.searchActiveTasksForActor(searchDto);
     }
     @Override
@@ -298,7 +298,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         SearchDto searchDto = new SearchDto();
         Actor actor = new Actor();
         actor.setId(actorId);
-        searchDto.setActor(actor);
+        searchDto.setActors(Arrays.asList(actor));
         return taskDao.searchActiveTasksForActor(searchDto);
     }
 
