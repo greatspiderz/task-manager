@@ -296,7 +296,7 @@ public class TaskManagerServiceImplTest {
         TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
 
         SearchDto searchDto = new SearchDto();
-        searchDto.setActor(actor);
+        searchDto.setActors(Arrays.asList(actor));
         List<Task> tasks = taskManagerService.findTasks(searchDto);
         assertEquals(1, tasks.size());
         assertEquals(tasks.get(0).getType(),"HAND_SHAKE");

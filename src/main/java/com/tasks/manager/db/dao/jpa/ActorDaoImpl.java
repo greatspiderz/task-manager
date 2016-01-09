@@ -21,15 +21,13 @@ public class ActorDaoImpl extends BaseDaoImpl<Actor> implements ActorDao{
         super(entityManagerProvider);
         entityClass = Actor.class;
     }
-    public Actor fetchByExternalId(String externalId){
+    public List<Actor> fetchByExternalId(String externalId){
         StringBuilder queryString = new StringBuilder("FROM Actor a WHERE external_id = (:external_id)");
         ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
         namedParamMapBuilder.put("external_id", externalId);
         ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
         List<Actor> actors = findByQueryAndNamedParams(null, null, queryString.toString(), namedParamMap);
-        if (actors.size()>0)
-            return actors.get(0);
-        return null;
+        return actors;
     }
 
     public void updateActorStatus(Long id, String status){
