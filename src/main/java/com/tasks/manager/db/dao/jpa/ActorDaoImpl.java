@@ -26,7 +26,7 @@ public class ActorDaoImpl extends BaseDaoImpl<Actor> implements ActorDao{
         ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
         namedParamMapBuilder.put("external_id", externalId);
         ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
-        List<Actor> actors = findByQueryAndNamedParams(0, 1, queryString.toString(), namedParamMap);
+        List<Actor> actors = findByQueryAndNamedParams(null, null, queryString.toString(), namedParamMap);
         if (actors.size()>0)
             return actors.get(0);
         return null;
