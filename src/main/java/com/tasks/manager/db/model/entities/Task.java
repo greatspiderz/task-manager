@@ -22,7 +22,7 @@ import java.util.List;
 @Entity
 @Table(name = "task")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@EqualsAndHashCode(callSuper=true, exclude = {"taskAttributes","relations"})
+@EqualsAndHashCode(callSuper=true, of = {"type"})
 public class Task extends BaseEntity{
 
     @NotNull
@@ -31,14 +31,14 @@ public class Task extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private TaskStatus status = TaskStatus.NEW;
 
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "actor_id")
     @JsonProperty(value = "actor_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
     @JsonIdentityReference(alwaysAsId = true)
     private Actor actor;
 
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "subject_id")
     @JsonProperty(value = "subject_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
