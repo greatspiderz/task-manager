@@ -2,10 +2,7 @@ package com.tasks.manager.service.api;
 
 import com.google.inject.ImplementedBy;
 import com.tasks.manager.db.exception.TaskNotFoundException;
-import com.tasks.manager.db.model.entities.Actor;
-import com.tasks.manager.db.model.entities.Subject;
-import com.tasks.manager.db.model.entities.Task;
-import com.tasks.manager.db.model.entities.TaskGroup;
+import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import com.tasks.manager.dto.TaskGraphEdge;
@@ -63,4 +60,5 @@ public interface TaskManagerService {
     TaskGroup fetchTaskGroupBySubjectExternalId(String externalId);
     void updateAllActiveTasksStatusInTaskGroup(TaskGroup taskGroup, TaskStatus taskStatus);
     Subject fetchSubjectByExternalId(String externalId);
+    void updateTaskAttribute(Task task, String attributeName, String attributeValue);
 }

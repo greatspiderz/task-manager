@@ -56,7 +56,7 @@ public class TaskManagerServiceImplTest {
 
     @Test
     public void testCreateAndFetchTaskGroup() {
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
+        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName, defaultAttributeValue,
                 defaultTaskStatus, defaultTaskType);
         TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
         assertNotNull(fetchedTaskGroup);
@@ -73,6 +73,13 @@ public class TaskManagerServiceImplTest {
         assertEquals(taskAttribute.getAttributeName(), defaultAttributeName);
         assertEquals(taskAttribute.getAttributeValue(), defaultAttributeValue);
 
+        taskManagerService.updateTaskAttribute(task, defaultAttributeName, "newAttr1Value");
+        taskManagerService.updateTaskAttribute(task, "newAttr2Name", "newAttr1Value");
+        Assert.assertEquals(2, taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId()).get(0).getTaskAttributes().size());
+        TaskAttributes taskAttribute1 = taskAttributeList.get(0);
+        TaskAttributes taskAttribute2 = taskAttributeList.get(1);
+        assertEquals(taskAttribute1.getAttributeValue(), "newAttr1Value");
+        assertEquals(taskAttribute2.getAttributeValue(), "newAttr1Value");
     }
 
     @Test

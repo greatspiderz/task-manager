@@ -371,6 +371,23 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public Subject fetchSubjectByExternalId(String externalId){
         return subjectDao.fetchByExternalId(externalId);
     }
+
+    @Override
+    public void updateTaskAttribute(Task task, String attributeName, String attributeValue) {
+        for(TaskAttributes attributes: task.getTaskAttributes()) {
+            if (attributes.getAttributeName().equals(attributeName)) {
+                attributes.setAttributeValue(attributeValue);
+                taskAttributesDao.save(attributes);
+                return;
+            }
+        }
+        TaskAttributes newAttribute = new TaskAttributes();
+        newAttribute.setAttributeName(attributeName);
+        newAttribute.setAttributeValue(attributeValue);
+        task.getTaskAttributes().add(newAttribute);
+        taskDao.save(task);
+    }
+
     @Override
     public List<TaskGroup> findActiveTaskgroupsWithAttribute(String attributeName, String attributeValue){
         List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeName, attributeValue);
