@@ -384,6 +384,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         TaskAttributes newAttribute = new TaskAttributes();
         newAttribute.setAttributeName(attributeName);
         newAttribute.setAttributeValue(attributeValue);
+        newAttribute.setTask(task);
         task.getTaskAttributes().add(newAttribute);
         taskAttributesDao.save(newAttribute);
         taskDao.save(task);
