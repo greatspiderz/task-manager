@@ -1,4 +1,4 @@
-version = '0.0.68-SNAPSHOT'
+version = '0.0.69-SNAPSHOT'
 
 // This is root project gradle file, it has no code only sub projects, sub projects have java code.
 apply plugin: 'java'
@@ -66,7 +66,7 @@ allprojects {
 
 }
 
-//gradle wrapper
+//gradle wrapperT
 task wrapper(type: Wrapper) {
     gradleVersion = '2.7'
 }
@@ -74,5 +74,5 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'task-manager'
-    version = '0.0.68-SNAPSHOT'
+    version = '0.0.69-SNAPSHOT'
 }
