@@ -16,6 +16,7 @@ import com.tasks.manager.service.api.EventPublisher;
 import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
 import com.tasks.manager.util.EventUtils;
+import com.tasks.manager.util.TaskManagerUtility;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -303,19 +304,41 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     public List<Task> getNextTasksForActor(String actorExternalId, Long completedTaskId)
     {
         List<Task> tasksForActor = new ArrayList<>();
+        List<Long> childIds = new ArrayList<>();
         if(completedTaskId!=null)
         {
             List<Relation> relations = relationDao.fetchByParentTaskId(completedTaskId);
+
             for(Relation relation:relations)
             {
                 Task taskForRelation = relation.getTask();
-                if(taskForRelation.getActor().getExternalId().equals(actorExternalId)){
+                Actor taskActor = taskForRelation.getActor();
+                childIds.add(taskForRelation.getId());
+
+                if(TaskManagerUtility.isTaskActive(taskForRelation.getStatus()) &&
+                        taskActor!=null && taskActor.getExternalId().equals(actorExternalId)){
                     tasksForActor.add(taskForRelation);
                 }
             }
 
         }
-        return tasksForActor;
+        if(tasksForActor.size()>0)
+            return tasksForActor;
+        else
+        {
+            List<Task> allChildTasksNextTask = new ArrayList<>();
+            for(Long childId:childIds)
+            {
+                List<Task> childsNextTask = getNextTasksForActor(actorExternalId, childId);
+                if(!allChildTasksNextTask.contains(childsNextTask))
+                {
+                    childsNextTask.removeAll(allChildTasksNextTask);
+                    allChildTasksNextTask.addAll(childsNextTask);
+
+                }
+            }
+            return allChildTasksNextTask;
+        }
     }
 
     @Override
