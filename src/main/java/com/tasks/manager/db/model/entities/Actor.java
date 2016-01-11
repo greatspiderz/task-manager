@@ -1,5 +1,6 @@
 package com.tasks.manager.db.model.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -32,6 +33,6 @@ public class Actor extends BaseEntity{
     private String externalId;
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonProperty(value = "task")
+    @JsonIgnore
     private List<Task> associatedTasks = new ArrayList<>();
 }
