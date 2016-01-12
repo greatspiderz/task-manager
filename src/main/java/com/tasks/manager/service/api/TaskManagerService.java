@@ -32,7 +32,7 @@ public interface TaskManagerService {
     void updateActorStatus(Long actorId, String status) throws TaskNotFoundException;
     void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException;
     Actor createActor(Actor actor);
-    Actor fetchActor(Long actorId);
+    Actor fetchActorByExternalId(String actorId);
     void updateSubject(Long taskId, Subject subject) throws TaskNotFoundException;
 
     void updateStatus( Long taskId, TaskTriggerEnum triggerEnum) throws TaskNotFoundException;
@@ -50,7 +50,7 @@ public interface TaskManagerService {
     TaskGroup saveTasks(TaskGroup taskGroup);
     TaskGroup getTaskGroupForTask(Task task);
     void updateParentTask(Task task, Long parentTaskId);
-    List<Task> getTasksforSubject(String subjectExternalId);
+    List<Task> getActiveTasksforSubject(String subjectExternalId);
     List<Task> getActiveTasksforActor(Long actorId);
     List<Task> getActiveTasksforActorByExternalId(String actorExternalId);
     List<Task> getNextTasksForActor(String actorExternalId, Long completedTaskId);

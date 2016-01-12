@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
@@ -143,8 +144,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public Actor fetchActor(Long actorId) {
-        return actorDao.fetchById(actorId);
+    public Actor fetchActorByExternalId(String actorId) {
+        List<Actor> actors = actorDao.fetchByExternalId(actorId);
+        if(actors.size()==0)
+            return null;
+        return actors.get(0);
     }
 
     public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException {
@@ -274,12 +278,13 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public List<Task> getTasksforSubject(String externalId) {
+    public List<Task> getActiveTasksforSubject(String externalId) {
         SearchDto searchDto = new SearchDto();
         Subject subject = new Subject();
         subject.setExternalId(externalId);
         searchDto.setSubject(subject);
-        return taskDao.search(searchDto);
+        List<Task> tasks = taskDao.search(searchDto);
+        return tasks.stream().filter(task -> TaskManagerUtility.isTaskActive(task.getStatus())).collect(Collectors.toList());
     }
 
     @Override
