@@ -19,7 +19,7 @@ import java.util.List;
 public class Relation extends BaseEntity {
 
     @NotNull
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "task_group_id")
     @JsonProperty(value = "task_group_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -27,7 +27,7 @@ public class Relation extends BaseEntity {
     private TaskGroup taskGroup;
 
     @NotNull
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     @JsonProperty(value = "task_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")

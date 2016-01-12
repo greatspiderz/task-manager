@@ -33,14 +33,14 @@ public class Task extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private TaskStatus status = TaskStatus.NEW;
 
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id")
     @JsonProperty(value = "actor_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
     @JsonIdentityReference(alwaysAsId = true)
     private Actor actor;
 
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     @JsonProperty(value = "subject_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
@@ -65,13 +65,11 @@ public class Task extends BaseEntity{
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "task_attributes")
     private List<TaskAttributes> taskAttributes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "relation")
     private List<Relation> relations;
 

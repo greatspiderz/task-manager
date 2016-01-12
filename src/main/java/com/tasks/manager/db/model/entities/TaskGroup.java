@@ -22,7 +22,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper=true, exclude = {"relations"})
 public class TaskGroup extends BaseEntity{
 
-    @OneToMany(mappedBy = "taskGroup", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "taskGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonProperty(value = "relation")
     private List<Relation> relations = new ArrayList<>();
 
