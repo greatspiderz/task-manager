@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.envers.Audited;
 import org.joda.time.DateTime;
 
@@ -63,11 +65,13 @@ public class Task extends BaseEntity{
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
+    @LazyCollection(LazyCollectionOption.FALSE)
     @JsonProperty(value = "task_attributes")
     private List<TaskAttributes> taskAttributes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
+    @LazyCollection(LazyCollectionOption.FALSE)
     @JsonProperty(value = "relation")
     private List<Relation> relations;
 

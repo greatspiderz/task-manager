@@ -405,7 +405,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         for(TaskAttributes attributes: task.getTaskAttributes()) {
             if (attributes.getAttributeName().equals(attributeName)) {
                 attributes.setAttributeValue(attributeValue);
-                taskAttributesDao.save(attributes);
+                taskDao.save(task);
                 return;
             }
         }
@@ -414,7 +414,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         newAttribute.setAttributeValue(attributeValue);
         newAttribute.setTask(task);
         task.getTaskAttributes().add(newAttribute);
-        taskAttributesDao.save(newAttribute);
         taskDao.save(task);
     }
 
