@@ -418,6 +418,7 @@ public class TaskManagerServiceImplTest {
         Actor actor = new Actor();
         actor.setStatus("IDLE");
         actor.setType("HERO");
+        actor.setExternalId("H1123");
         Actor createdActor = taskManagerService.createActor(actor);
         assertEquals("IDLE", createdActor.getStatus());
         try{
@@ -426,7 +427,7 @@ public class TaskManagerServiceImplTest {
         {
             fail("Exception thrown on updating actor");
         }
-        Actor updatedActor = taskManagerService.fetchActor(createdActor.getId());
+        Actor updatedActor = taskManagerService.fetchActorByExternalId("H1123");
         assertEquals("OFFLINE", createdActor.getStatus());
     }
     @Test
