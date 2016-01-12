@@ -280,8 +280,12 @@ public class TaskManagerServiceImplTest {
     public void testCreateTask(){
         TaskGroup taskGroup = new TaskGroup();
         taskGroup = taskManagerService.createTaskGroup(taskGroup);
+        String subjectType = "Shipment";
+        Subject subject = new Subject();
+        subject.setType(subjectType);
         Task task = new Task();
         task.setType("HAND_SHAKE");
+        task.setSubject(subject);
         taskManagerService.createTask(task, taskGroup.getId());
         TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
         List<Task> taskList = taskManagerService.getTasksForTaskGroup(updatedTaskGroup.getId());
@@ -293,8 +297,12 @@ public class TaskManagerServiceImplTest {
     public void testSearchTasksForActor(){
         TaskGroup taskGroup = new TaskGroup();
         taskGroup = taskManagerService.createTaskGroup(taskGroup);
+        String subjectType = "Shipment";
+        Subject subject = new Subject();
+        subject.setType(subjectType);
         Task task = new Task();
         task.setType("HAND_SHAKE");
+        task.setSubject(subject);
         Actor actor = new Actor();
         actor.setExternalId("hero123");
         actor.setType("HERO");
@@ -369,9 +377,13 @@ public class TaskManagerServiceImplTest {
                 defaultTaskStatus, defaultTaskType);
         TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
         List<Task> taskList = taskManagerService.getTasksForTaskGroup(taskGroup.getId());
+        String subjectType = "Shipment";
+        Subject subject = new Subject();
+        subject.setType(subjectType);
         Task parentTask = taskList.get(0);
         Task task = new Task();
         task.setType("HAND_SHAKE");
+        task.setSubject(subject);
         task.setStatus(TaskStatus.CANCELLED);
         Relation relation = new Relation();
         relation.setParentTaskId(parentTask.getId());
@@ -529,12 +541,16 @@ public class TaskManagerServiceImplTest {
         TaskAttributes ta = new TaskAttributes();
         ta.setAttributeName(attributeName);
         ta.setAttributeValue(attributeValue);
+        String subjectType = "Shipment";
+        Subject subject = new Subject();
+        subject.setType(subjectType);
         Task task = new Task();
         task.setStatus(status);
         task.setType(type);
         task.setStartTime(defaultDateTime);
         task.setEndTime(defaultDateTime);
         task.setTaskAttributes(new ArrayList<>(Arrays.asList(ta)));
+        task.setSubject(subject);
         ta.setTask(task);
         TaskGroup taskGrp = new TaskGroup();
         TaskGroup tskGrpCreated = taskManagerService.createTaskGroup(taskGrp);

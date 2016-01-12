@@ -12,6 +12,7 @@ import lombok.Data;
 import org.joda.time.DateTime;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by shlok.chaurasia on 28/11/15.
@@ -29,8 +30,8 @@ public class TaskEvent {
     @JsonProperty("task_type")
     private String taskType;
 
-    @JsonProperty("subject")
-    private Subject subject;
+    @JsonProperty("subjects")
+    private Set<Subject> subjects;
 
     @JsonProperty("actor")
     private Actor actor;

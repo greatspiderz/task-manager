@@ -27,7 +27,7 @@ public class RelationDaoImpl extends BaseDaoImpl<Relation> implements RelationDa
     }
 
     public List<Relation> fetchByTaskId(long taskId){
-        Criterion listIdsCriterion = Restrictions.eq("taskId", taskId);
+        Criterion listIdsCriterion = Restrictions.eq("task.id", taskId);
         return findByCriteria(listIdsCriterion);
     }
 
