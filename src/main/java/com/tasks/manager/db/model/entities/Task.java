@@ -69,7 +69,7 @@ public class Task extends BaseEntity{
     @JsonProperty(value = "task_attributes")
     private List<TaskAttributes> taskAttributes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "task", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonProperty(value = "relation")
     private List<Relation> relations;
 

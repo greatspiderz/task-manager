@@ -25,7 +25,7 @@ public class TaskAttributes extends BaseEntity{
     @JsonIdentityReference(alwaysAsId = true)
     private Task task;
 
-    @Column(name = "attribute_name")
+    @Column(name = "attribute_name", columnDefinition = "LONGTEXT")
     @JsonProperty(value = "attribute_name")
     private String attributeName;
 
