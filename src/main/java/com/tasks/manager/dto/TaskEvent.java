@@ -31,7 +31,7 @@ public class TaskEvent {
     private String taskType;
 
     @JsonProperty("subjects")
-    private Set<Subject> subjects;
+    private List<Subject> subjects;
 
     @JsonProperty("actor")
     private Actor actor;

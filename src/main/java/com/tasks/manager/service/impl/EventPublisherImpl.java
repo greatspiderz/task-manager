@@ -1,6 +1,7 @@
 package com.tasks.manager.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.flipkart.restbus.client.core.MessageSender;
 import com.flipkart.restbus.client.entity.Event;
 import com.flipkart.restbus.client.entity.OutboundMessage;
@@ -37,6 +38,7 @@ public class EventPublisherImpl implements EventPublisher {
                               RelationDao relationDao, TaskDao taskDao) {
         this.sender = sender;
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false);
         this.restEnv = restBusConfig.getRestEnvName();
         this.relationDao = relationDao;
         this.taskDao = taskDao;
@@ -97,19 +99,19 @@ public class EventPublisherImpl implements EventPublisher {
         if (task.getSubject() != null)
             return new HashSet<>(Arrays.asList(task.getSubject()));
         else {
-            Set<Subject> tasks = new HashSet<>();
+            Set<Subject> subjects = new HashSet<>();
             List<Relation> relations = relationDao.fetchByTaskId(task.getId());
             for (Relation relation : relations) {
                 if(relation.getParentTaskId()!=null){
                     Task parentTask = taskDao.fetchById(relation.getParentTaskId());
                     if (parentTask.getSubject() != null)
-                        tasks.add(parentTask.getSubject());
+                        subjects.add(parentTask.getSubject());
                     else {
-                        tasks.addAll(getSubjects(parentTask));
+                        subjects.addAll(getSubjects(parentTask));
                     }
                 }
             }
-            return tasks;
+            return subjects;
         }
     }
 }
