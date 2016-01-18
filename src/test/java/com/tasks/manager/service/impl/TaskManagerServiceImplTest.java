@@ -249,6 +249,13 @@ public class TaskManagerServiceImplTest {
     }
 
     @Test
+    public void testGetTaskForActorByExternalIdFailed(){
+        List<Task> activeTasks = taskManagerService.getActiveTasksForActor("AC123");
+        assertEquals(0, activeTasks.size());
+    }
+
+
+    @Test
     public void testfindActiveTaskgroupsWithAttribute(){
         Long taskgrp1 =createTestTaskGroupWithTask("shipmentID","S1232",
                 TaskStatus.NEW, defaultTaskType);

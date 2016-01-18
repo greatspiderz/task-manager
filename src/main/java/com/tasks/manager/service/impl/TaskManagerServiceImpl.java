@@ -239,8 +239,8 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     @Override
     public List<Task> getActiveTasksForActor(String actorExternalId){
         List<Actor> actorsSearched = actorDao.fetchByExternalId(actorExternalId);
-        if(actorsSearched==null)
-            return null;
+        if(actorsSearched.size()==0)
+            return new ArrayList<>();
         SearchDto searchDto = new SearchDto();
         searchDto.setActors(actorsSearched);
         return taskDao.searchActiveTasksForActor(searchDto);
