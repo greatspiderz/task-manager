@@ -32,7 +32,7 @@ public class Actor extends BaseEntity{
     @JsonProperty(value = "external_id")
     private String externalId;
 
-    @OneToMany(mappedBy = "actor", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Task> associatedTasks = new ArrayList<>();
 }

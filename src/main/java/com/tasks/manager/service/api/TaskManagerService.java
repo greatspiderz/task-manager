@@ -33,7 +33,6 @@ public interface TaskManagerService {
     void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException;
     Actor createActor(Actor actor);
     Actor fetchActorByExternalId(String actorId);
-    void updateSubject(Long taskId, Subject subject) throws TaskNotFoundException;
 
     void updateStatus( Long taskId, TaskTriggerEnum triggerEnum) throws TaskNotFoundException;
 
@@ -41,22 +40,17 @@ public interface TaskManagerService {
 
     List<Task> findTasks(SearchDto searchdto);
 
-    //revisit
-    //List<Task> findTasksForAttributes(HashMap<String, String> attibuteNameValue);
-
     List<Task> getTasksForTaskGroup(Long taskGroupId);
     Task createRelation(Task task, TaskGroup taskGroup, Long parentTaskId);
     DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId);
-    TaskGroup saveTasks(TaskGroup taskGroup);
     TaskGroup getTaskGroupForTask(Task task);
     void updateParentTask(Task task, Long parentTaskId);
     List<Task> getActiveTasksforSubject(String subjectExternalId);
-    List<Task> getActiveTasksforActor(Long actorId);
-    List<Task> getActiveTasksforActorByExternalId(String actorExternalId);
+    List<Task> getActiveTasksForActor(String actorExternalId);
+
     List<Task> getNextTasksForActor(String actorExternalId, Long completedTaskId);
     List<Task> bulkInsertTasks(List<Task> tasks);
-    void cancelAllChildTasks(Task task);
-    List<TaskGroup> findActiveTaskgroupsWithAttribute(String attributeName, String attributeValue);
+    List<TaskGroup> findActiveTaskGroupsWithAttribute(String attributeName, String attributeValue);
     TaskGroup fetchTaskGroupBySubjectExternalId(String externalId);
     void updateAllActiveTasksStatusInTaskGroup(TaskGroup taskGroup, TaskStatus taskStatus);
     Subject fetchSubjectByExternalId(String externalId);

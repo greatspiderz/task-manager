@@ -29,7 +29,7 @@ public class Subject extends BaseEntity{
     @JsonProperty(value = "external_id")
     private String externalId;
 
-    @OneToMany(mappedBy = "subject", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Task> associatedTasks;
 

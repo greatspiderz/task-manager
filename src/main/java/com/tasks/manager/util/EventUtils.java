@@ -5,6 +5,7 @@ import com.tasks.manager.db.model.entities.Task;
 import com.tasks.manager.dto.TaskEvent;
 import org.joda.time.DateTime;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 /**
@@ -19,7 +20,7 @@ public class EventUtils {
         taskEvent.setStatus(task.getStatus());
         taskEvent.setAttributes(task.getTaskAttributes());
         taskEvent.setEventDate(DateTime.now());
-        taskEvent.setSubjects(subjects);
+        taskEvent.setSubjects(new ArrayList<>(subjects));
         return taskEvent;
     }
 }

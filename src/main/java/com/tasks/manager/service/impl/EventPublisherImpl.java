@@ -1,15 +1,14 @@
 package com.tasks.manager.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.flipkart.restbus.client.core.MessageSender;
 import com.flipkart.restbus.client.entity.Event;
 import com.flipkart.restbus.client.entity.OutboundMessage;
 import com.fquick.resthibernateplugin.core.annotations.AsyncAnnotation;
 import com.fquick.resthibernateplugin.core.configs.RestBusConfig;
 import com.google.inject.Inject;
-import com.tasks.manager.db.dao.interfaces.RelationDao;
 import com.tasks.manager.db.dao.interfaces.TaskDao;
-import com.tasks.manager.db.dao.interfaces.TaskGroupDao;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.TaskEvent;
@@ -37,6 +36,7 @@ public class EventPublisherImpl implements EventPublisher {
                               TaskDao taskDao) {
         this.sender = sender;
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false);
         this.restEnv = restBusConfig.getRestEnvName();
         this.taskDao = taskDao;
     }
@@ -101,19 +101,19 @@ public class EventPublisherImpl implements EventPublisher {
         if (task.getSubject() != null)
             return new HashSet<>(Arrays.asList(task.getSubject()));
         else {
-            Set<Subject> tasks = new HashSet<>();
+            Set<Subject> subjects = new HashSet<>();
             List<Relation> relations = task.getRelations();
             for (Relation relation : relations) {
                 if(relation.getParentTaskId()!=null){
                     Task parentTask = taskDao.fetchById(relation.getParentTaskId());
                     if (parentTask.getSubject() != null)
-                        tasks.add(parentTask.getSubject());
+                        subjects.add(parentTask.getSubject());
                     else {
-                        tasks.addAll(getSubjects(parentTask));
+                        subjects.addAll(getSubjects(parentTask));
                     }
                 }
             }
-            return tasks;
+            return subjects;
         }
     }
 }

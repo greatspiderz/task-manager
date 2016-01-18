@@ -91,23 +91,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
 
     @Override
-    public TaskGroup saveTasks(TaskGroup taskGroup) {
-        List<Relation> relations = taskGroup.getRelations();
-        List<Task> tasks = new ArrayList<>();
-        for (Relation relation : relations) {
-            tasks.add(relation.getTask());
-        }
-        taskGroupDao.save(taskGroup);
-        for (Task task : tasks) {
-            eventPublisher.publishTaskCreationEvent(task);
-        }
-
-        taskDao.bulkInsert(tasks);
-        relationDao.bulkInsert(relations);
-        return taskGroup;
-    }
-
-    @Override
     public Task createTaskWithParentTasks(Task task, long tgId, List<Long> parentTaskIds) {
         TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
         taskDao.save(task);
@@ -132,6 +115,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.fetchById(taskId);
     }
 
+    //Remove
     @Override
     public void updateActorStatus(Long actorId, String status) throws TaskNotFoundException {
         actorDao.updateActorStatus(actorId, status);
@@ -161,21 +145,6 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateSubject(Long taskId, Subject subject) throws TaskNotFoundException {
-        Task task = taskDao.fetchById(taskId);
-        if (task != null) {
-            task.setSubject(subject);
-            if (subject.getAssociatedTasks() == null)
-                subject.setAssociatedTasks(new ArrayList<>());
-            subject.getAssociatedTasks().add(task);
-            subjectDao.save(subject);
-            taskDao.save(task);
-            return;
-        }
-        throw new TaskNotFoundException(taskId);
-    }
-
-    @Override
     public void updateStatus(Long taskId, TaskTriggerEnum trigger) throws TaskNotFoundException {
         Task task = fetchTask(taskId);
         TaskStatus newStatus = updateTaskStateMachine(task, trigger);
@@ -192,6 +161,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return stateMachine.getState();
     }
 
+    //Remove
     @Override
     public void updateETA(Long taskId, Long eta) throws TaskNotFoundException {
         taskDao.updateETA(taskId, eta);
@@ -227,29 +197,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskDao.bulkInsert(tasks);
     }
 
-    //todo revisit
-//    @Override
-//    public List<Task> findTasksForAttributes(HashMap<String, String> attributeNameValue) {
-//
-//        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeNameValue);
-//        Iterator<TaskAttributes> iterator = taskAttributes.iterator();
-//        List<Task> tasks = new ArrayList<>();
-//        while (iterator.hasNext()) {
-//            TaskAttributes taskAttribute = iterator.next();
-//            tasks.add(taskAttribute.getTask());
-//        }
-//        return tasks;
-//    }
-
-    public List<Task> fetchParentTasks(long taskId) {
-        List<Relation> relations = taskDao.fetchById(taskId).getRelations();
-        List<Long> parentIds = new ArrayList<>();
-        for (Relation relation : relations) {
-            parentIds.add(relation.getParentTaskId());
-        }
-        return taskDao.getAll(parentIds);
-    }
-
+    @Override
     public DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId) {
         return getTaskGraph(taskGroupId);
     }
@@ -287,19 +235,12 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return tasks.stream().filter(task -> TaskManagerUtility.isTaskActive(task.getStatus())).collect(Collectors.toList());
     }
 
+
     @Override
-    public List<Task> getActiveTasksforActor(Long actorId){
-        SearchDto searchDto = new SearchDto();
-        Actor actor = new Actor();
-        actor.setId(actorId);
-        searchDto.setActors(Arrays.asList(actor));
-        return taskDao.searchActiveTasksForActor(searchDto);
-    }
-    @Override
-    public List<Task> getActiveTasksforActorByExternalId(String actorExternalId){
+    public List<Task> getActiveTasksForActor(String actorExternalId){
         List<Actor> actorsSearched = actorDao.fetchByExternalId(actorExternalId);
-        if(actorsSearched==null)
-            return null;
+        if(actorsSearched.size()==0)
+            return new ArrayList<>();
         SearchDto searchDto = new SearchDto();
         searchDto.setActors(actorsSearched);
         return taskDao.searchActiveTasksForActor(searchDto);
@@ -346,32 +287,8 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
     }
 
-    @Override
-    public void cancelAllChildTasks(Task task)
-    {
-        List<Relation> relations = relationDao.fetchByParentTaskId(task.getId());
-        if(relations.size() > 0){
-            List<Long> taskIds = new ArrayList<>();
-            for(Relation relation: relations){
-                taskIds.add(relation.getTask().getId());
-            }
 
-            List<Task> childTasks = taskDao.getAll(taskIds);
-            for(Task taskToCancel: childTasks){
-                if(taskToCancel.getStatus() != TaskStatus.CANCELLED){
-                    try{
-                        taskDao.updateStatus(taskToCancel.getId(), TaskStatus.CANCELLED);
-                    }
-                    catch(TaskNotFoundException e)
-                    {
-                        log.error("No Task found for id : " + taskToCancel.getId() +" check again!");
-                    }
-                    cancelAllChildTasks(taskToCancel);
-                }
-            }
-        }
-    }
-
+    //Revisit
     @Override
     public void updateAllActiveTasksStatusInTaskGroup(TaskGroup taskGroup, TaskStatus taskStatus)
     {
@@ -386,6 +303,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
     }
 
+    //Remove
     @Override
     public TaskGroup fetchTaskGroupBySubjectExternalId(String externalId){
         Subject subject =  subjectDao.fetchByExternalId(externalId);
@@ -395,6 +313,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return null;
     }
 
+    //Remove
     @Override
     public Subject fetchSubjectByExternalId(String externalId){
         return subjectDao.fetchByExternalId(externalId);
@@ -418,7 +337,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public List<TaskGroup> findActiveTaskgroupsWithAttribute(String attributeName, String attributeValue){
+    public List<TaskGroup> findActiveTaskGroupsWithAttribute(String attributeName, String attributeValue){
         List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeName, attributeValue);
         List<Task> tasks = new ArrayList<>();
         if(taskAttributes.size()>0){

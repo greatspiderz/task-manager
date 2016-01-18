@@ -106,28 +106,6 @@ public class TaskManagerServiceImplTest {
         assertEquals(actorType, updatedTask.getActor().getType());
     }
 
-    @Test
-    public void testUpdateSubject(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        String subjectType = "Shipment";
-        Subject subject = new Subject();
-        subject.setType(subjectType);
-        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
-        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
-        try{
-            taskManagerService.updateSubject(task.getId(), subject);
-        }
-        catch(TaskNotFoundException e){
-            fail("Exception thrown on updating subject");
-        }
-        Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertNotNull(updatedTask.getSubject());
-        assertNotNull("Shipment", updatedTask.getSubject().getType());
-        assertEquals(1, updatedTask.getSubject().getAssociatedTasks().size());
-        assertEquals(subjectType, updatedTask.getSubject().getType());
-    }
 
     @Test
     public void testUpdateTaskStatus(){
@@ -229,6 +207,7 @@ public class TaskManagerServiceImplTest {
         Actor actor = new Actor();
         actor.setStatus("ASSIGNED");
         actor.setType("HERO");
+        actor.setExternalId("A1233333");
         Actor createdActor = taskManagerService.createActor(actor);
         try {
             taskManagerService.updateTaskActor(taskManagerService.getTasksForTaskGroup(taskGrp1.getId()).get(0).getId(), createdActor);
@@ -238,7 +217,7 @@ public class TaskManagerServiceImplTest {
         {
             fail("Exception occured while updating task actor");
         }
-        List<Task> activeTasks = taskManagerService.getActiveTasksforActor(createdActor.getId());
+        List<Task> activeTasks = taskManagerService.getActiveTasksForActor(createdActor.getExternalId());
         assertEquals(1, activeTasks.size());
     }
 
@@ -265,15 +244,22 @@ public class TaskManagerServiceImplTest {
         {
             fail("Exception occured while updating task actor");
         }
-        List<Task> activeTasks = taskManagerService.getActiveTasksforActorByExternalId(createdActor.getExternalId());
+        List<Task> activeTasks = taskManagerService.getActiveTasksForActor(createdActor.getExternalId());
         assertEquals(2, activeTasks.size());
     }
+
+    @Test
+    public void testGetTaskForActorByExternalIdFailed(){
+        List<Task> activeTasks = taskManagerService.getActiveTasksForActor("AC123");
+        assertEquals(0, activeTasks.size());
+    }
+
 
     @Test
     public void testfindActiveTaskgroupsWithAttribute(){
         Long taskgrp1 =createTestTaskGroupWithTask("shipmentID","S1232",
                 TaskStatus.NEW, defaultTaskType);
-        List<TaskGroup> taskgrps = taskManagerService.findActiveTaskgroupsWithAttribute("shipmentID", "S1232");
+        List<TaskGroup> taskgrps = taskManagerService.findActiveTaskGroupsWithAttribute("shipmentID", "S1232");
         assertEquals(1, taskgrps.size());
     }
     @Test
@@ -315,102 +301,6 @@ public class TaskManagerServiceImplTest {
         List<Task> tasks = taskManagerService.findTasks(searchDto);
         assertEquals(1, tasks.size());
         assertEquals(tasks.get(0).getType(),"HAND_SHAKE");
-    }
-    @Test
-    public void testcancelAllChildTasks(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(taskGroup.getId());
-
-        Task parentTask = taskList.get(0);
-
-        Task handShakeTask = new Task();
-        handShakeTask.setType("HAND_SHAKE");
-        handShakeTask.setStatus(TaskStatus.NEW);
-        List<Long> parentIds = new ArrayList<>();
-        parentIds.add(parentTask.getId());
-        taskManagerService.createTaskWithParentTasks(handShakeTask, createdTaskGroupId, parentIds);
-
-
-
-        Task travelTask1 = new Task();
-        travelTask1.setType("TRAVEL");
-        travelTask1.setStatus(TaskStatus.NEW);
-        parentIds = new ArrayList<>();
-        parentIds.add(handShakeTask.getId());
-        taskManagerService.createTaskWithParentTasks(travelTask1, createdTaskGroupId, parentIds);
-
-
-        Task travelTask2 = new Task();
-        travelTask2.setType("TRAVEL");
-        travelTask2.setStatus(TaskStatus.NEW);
-        parentIds = new ArrayList<>();
-        parentIds.add(handShakeTask.getId());
-        taskManagerService.createTaskWithParentTasks(travelTask2, createdTaskGroupId, parentIds);
-
-
-        Task deliver = new Task();
-        deliver.setType("DELIVER");
-        deliver.setStatus(TaskStatus.NEW);
-        parentIds = new ArrayList<>();
-        parentIds.add(travelTask1.getId());
-        parentIds.add(travelTask2.getId());
-        taskManagerService.createTaskWithParentTasks(deliver, createdTaskGroupId, parentIds);
-
-        SearchDto searchDto = new SearchDto();
-        searchDto.setStatus(TaskStatus.NEW);
-        List<Task> tasksBeforeCancellation = taskManagerService.findTasks(searchDto);
-        taskManagerService.cancelAllChildTasks(handShakeTask);
-        searchDto.setStatus(TaskStatus.NEW);
-        List<Task> tasksAfterCancellation = taskManagerService.findTasks(searchDto);
-        searchDto.setStatus(TaskStatus.CANCELLED);
-        List<Task> tasksCancelled = taskManagerService.findTasks(searchDto);
-
-        assertEquals(3, tasksCancelled.size());
-        assertEquals(5, tasksBeforeCancellation.size());
-        assertEquals(2, tasksAfterCancellation.size());
-    }
-    @Test
-    public void testFetchParentTask(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(taskGroup.getId());
-        String subjectType = "Shipment";
-        Subject subject = new Subject();
-        subject.setType(subjectType);
-        Task parentTask = taskList.get(0);
-        Task task = new Task();
-        task.setType("HAND_SHAKE");
-        task.setSubject(subject);
-        task.setStatus(TaskStatus.CANCELLED);
-        Relation relation = new Relation();
-        relation.setParentTaskId(parentTask.getId());
-        relation.setTask(task);
-        relation.setTaskGroup(taskGroup);
-
-        List<Relation> relations = new ArrayList<>();
-        relations.add(relation);
-        task.setRelations(relations);
-        taskGroup.getRelations().add(relation);
-        taskManagerService.createTask(task, createdTaskGroupId);
-        TaskGroup updatedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> updatedTaskList = taskManagerService.getTasksForTaskGroup(taskGroup.getId());
-        Task travelTask = null;
-        System.out.print(updatedTaskList.get(1).getType());
-        for(Task travel : updatedTaskList)
-        {
-            if(travel.getType() == "HAND_SHAKE")
-            {
-                travelTask = travel;
-                break;
-            }
-        }
-
-        List<Task> createdParentTask = taskManagerService.fetchParentTasks(travelTask.getId());
-        assertEquals(createdParentTask.size(), 1);
-        assertEquals(createdParentTask.get(0).getType(), "PICK");
     }
 
     @Test
@@ -512,28 +402,6 @@ public class TaskManagerServiceImplTest {
         }
 
 
-    }
-
-    @Test
-    public void testFetchSubjectByExternalId(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        String subjectType = "Shipment";
-        Subject subject = new Subject();
-        subject.setType(subjectType);
-        subject.setExternalId("S1112233");
-        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
-        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
-        try{
-            taskManagerService.updateSubject(task.getId(), subject);
-        }
-        catch(TaskNotFoundException e){
-            fail("Exception thrown on updating subject");
-        }
-        Subject updatedSubject = taskManagerService.fetchSubjectByExternalId("S1112233");
-        Assert.assertNotNull(updatedSubject);
-        Assert.assertEquals("S1112233", updatedSubject.getExternalId());
     }
 
     @Transactional(rollbackOn = Exception.class)

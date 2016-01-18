@@ -29,7 +29,7 @@ public class TaskAttributes extends BaseEntity{
     @JsonProperty(value = "attribute_name")
     private String attributeName;
 
-    @Column(name = "attribute_value")
+    @Column(name = "attribute_value", columnDefinition = "LONGTEXT")
     @JsonProperty(value = "attribute_value")
     private String attributeValue;
 }
