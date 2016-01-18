@@ -429,14 +429,14 @@ public class TaskManagerServiceImpl implements TaskManagerService {
                 }
             }
         }
-        List<TaskGroup> taskGroups = new ArrayList<>();
+        Set<TaskGroup> taskGroups = new HashSet<>();
         for(Task taskForAttribute : tasks)
         {
             TaskGroup taskGrp = getTaskGroupForTask(taskForAttribute);
             if(!taskGroups.contains(taskGrp))
                 taskGroups.add(taskGrp);
         }
-        return taskGroups;
+        return new ArrayList<>(taskGroups);
     }
 
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {

@@ -9,6 +9,7 @@ import com.fquick.resthibernateplugin.core.configs.RestBusConfig;
 import com.google.inject.Inject;
 import com.tasks.manager.db.dao.interfaces.RelationDao;
 import com.tasks.manager.db.dao.interfaces.TaskDao;
+import com.tasks.manager.db.dao.interfaces.TaskGroupDao;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.TaskEvent;
@@ -29,25 +30,24 @@ public class EventPublisherImpl implements EventPublisher {
     private String restEnv;
     private ObjectMapper objectMapper;
     private String exchangeName = "fquick.tasks";
-    private final RelationDao relationDao;
     private final TaskDao taskDao;
 
     @Inject
     public EventPublisherImpl(@AsyncAnnotation MessageSender sender, RestBusConfig restBusConfig,
-                              RelationDao relationDao, TaskDao taskDao) {
+                              TaskDao taskDao) {
         this.sender = sender;
         this.objectMapper = new ObjectMapper();
         this.restEnv = restBusConfig.getRestEnvName();
-        this.relationDao = relationDao;
         this.taskDao = taskDao;
     }
 
     @Override
     public void publishTaskCreationEvent(Task task) {
         Set<Subject> subjects = getSubjects(task);
-        TaskEvent taskEvent = EventUtils.getTaskEvent(task,subjects);
+        TaskEvent taskEvent = EventUtils.getTaskEvent(task, subjects);
         taskEvent.setEvent("TASK_CREATION_EVENT");
-        publishTaskEvent(taskEvent.getEvent(), taskEvent);
+        long taskGroupId = task.getRelations().get(0).getTaskGroup().getId();
+        publishTaskEvent(taskEvent.getEvent(), taskEvent, taskGroupId);
     }
 
     @Override
@@ -56,7 +56,8 @@ public class EventPublisherImpl implements EventPublisher {
         TaskEvent taskEvent = EventUtils.getTaskEvent(task,subjects);
         taskEvent.setOldStatus(oldStatus);
         taskEvent.setEvent("TASK_STATUS_CHANGE_EVENT");
-        publishTaskEvent(taskEvent.getEvent(), taskEvent);
+        long taskGroupId = task.getRelations().get(0).getTaskGroup().getId();
+        publishTaskEvent(taskEvent.getEvent(), taskEvent,taskGroupId);
     }
 
     @Override
@@ -65,7 +66,8 @@ public class EventPublisherImpl implements EventPublisher {
         TaskEvent taskEvent = EventUtils.getTaskEvent(task,subjects);
         taskEvent.setOldAttributes(oldAttributes);
         taskEvent.setEvent("TASK_ATTRIBUTE_CHANGE_EVENT");
-        publishTaskEvent(taskEvent.getEvent(), taskEvent);
+        long taskGroupId = task.getRelations().get(0).getTaskGroup().getId();
+        publishTaskEvent(taskEvent.getEvent(), taskEvent,taskGroupId);
     }
 
     @Override
@@ -74,14 +76,16 @@ public class EventPublisherImpl implements EventPublisher {
         TaskEvent taskEvent = EventUtils.getTaskEvent(task,subjects);
         taskEvent.setOldActor(oldActor);
         taskEvent.setEvent("ACTOR_ASSIGNMENT_EVENT");
-        publishTaskEvent(taskEvent.getEvent(), taskEvent);
+        long taskGroupId = task.getRelations().get(0).getTaskGroup().getId();
+        publishTaskEvent(taskEvent.getEvent(), taskEvent,taskGroupId);
     }
 
-    private void publishTaskEvent(String eventName, TaskEvent taskEvent) {
+    private void publishTaskEvent(String eventName, TaskEvent taskEvent, long taskGroupId) {
         try {
             Event event = new Event(eventName, objectMapper.writeValueAsString(taskEvent));
             event.setExchangeName(this.restEnv + "." + this.exchangeName);
             event.setExchangeType(OutboundMessage.ExchangeType.topic.name());
+            event.setGroupId(Long.toString(taskGroupId));
             sender.publish(event);
         } catch (IOException e) {
             log.error("Exception found while publishing event to RestBus", e.getMessage());
@@ -98,7 +102,7 @@ public class EventPublisherImpl implements EventPublisher {
             return new HashSet<>(Arrays.asList(task.getSubject()));
         else {
             Set<Subject> tasks = new HashSet<>();
-            List<Relation> relations = relationDao.fetchByTaskId(task.getId());
+            List<Relation> relations = task.getRelations();
             for (Relation relation : relations) {
                 if(relation.getParentTaskId()!=null){
                     Task parentTask = taskDao.fetchById(relation.getParentTaskId());
