@@ -73,4 +73,8 @@ public class Task extends BaseEntity{
     @JsonProperty(value = "relation")
     private List<Relation> relations;
 
+    @JsonProperty(value = "tenant_id")
+    @Column(name = "tenant_id")
+    private String tenantId;
+
 }
