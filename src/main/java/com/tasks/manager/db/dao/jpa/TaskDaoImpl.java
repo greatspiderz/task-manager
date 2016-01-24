@@ -68,10 +68,10 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
 
     public List<Task> search(SearchDto searchDto)
     {
-        StringBuilder queryString = new StringBuilder("select t from Task t");
+        StringBuilder queryString = new StringBuilder("select t from Task t, TaskAttributes ta");
         ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
 
-        queryString.append(" where ");
+        queryString.append(" where t = ta.task and ");
         List<String> queryParamStringList = new ArrayList<>();
         if(searchDto.getStatus()!=null)
         {
@@ -87,13 +87,29 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
 
         if(searchDto.getActors()!=null)
         {
-            queryParamStringList.add("t.actor.externalId = :actor_ids");
+            queryParamStringList.add("t.actor.externalId in :actor_ids");
             namedParamMapBuilder.put("actor_ids", searchDto.getActors().stream().map(actor -> actor.getExternalId()).collect(Collectors.toList()));
         }
         if(searchDto.getSubject()!=null){
             queryParamStringList.add("t.subject.externalId = :subject_id");
             namedParamMapBuilder.put("subject_id", searchDto.getSubject().getExternalId());
         }
+        if(searchDto.getTenant()!=null) {
+            queryParamStringList.add("t.tenantId = :tenant_id");
+            namedParamMapBuilder.put("tenant_id", searchDto.getTenant());
+        }
+        if(searchDto.getCreatedAt() != null) {
+            queryParamStringList.add("t.createdAt between :createdAtStart and :createdAtEnd");
+            namedParamMapBuilder.put("createdAtStart", searchDto.getCreatedAt().withTimeAtStartOfDay());
+            namedParamMapBuilder.put("createdAtEnd", searchDto.getCreatedAt().withTimeAtStartOfDay().plusDays(1));
+        }
+        if(searchDto.getTaskAttributes() != null) {
+            queryParamStringList.add("ta.attributeName = :taskAttributeName");
+            namedParamMapBuilder.put("taskAttributeName", searchDto.getTaskAttributes().getAttributeName());
+            queryParamStringList.add("ta.attributeValue = :taskAttributeValue");
+            namedParamMapBuilder.put("taskAttributeValue", searchDto.getTaskAttributes().getAttributeValue());
+        }
+
         ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
         queryString.append(String.join( " and ", queryParamStringList));
         List<Task> taskResults = new ArrayList<>();

@@ -155,6 +155,21 @@ public class TaskManagerServiceImplTest {
         listTasks.add(t1);
         listTasks.add(t2);
         listTasks.add(t3);
+        TaskAttributes ta1 = new TaskAttributes();
+        ta1.setAttributeName("testname");
+        ta1.setAttributeValue("testvalue");
+        ta1.setTask(t1);
+        t1.setTaskAttributes(new ArrayList<>(Arrays.asList(ta1)));
+        TaskAttributes ta2 = new TaskAttributes();
+        ta2.setAttributeName("testname");
+        ta2.setAttributeValue("testvalue");
+        ta2.setTask(t2);
+        t2.setTaskAttributes(new ArrayList<>(Arrays.asList(ta2)));
+        TaskAttributes ta3 = new TaskAttributes();
+        ta3.setAttributeName("testname");
+        ta3.setAttributeValue("testvalue");
+        ta3.setTask(t3);
+        t3.setTaskAttributes(new ArrayList<>(Arrays.asList(ta3)));
         taskManagerService.bulkInsertTasks(listTasks);
         SearchDto searchdto = new SearchDto();
         searchdto.setType("PICK");
@@ -293,6 +308,11 @@ public class TaskManagerServiceImplTest {
         actor.setExternalId("hero123");
         actor.setType("HERO");
         task.setActor(actor);
+        TaskAttributes ta = new TaskAttributes();
+        ta.setAttributeName("testname");
+        ta.setAttributeValue("testvalue");
+        ta.setTask(task);
+        task.setTaskAttributes(new ArrayList<>(Arrays.asList(ta)));
         taskManagerService.createTask(task, taskGroup.getId());
         TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
 
