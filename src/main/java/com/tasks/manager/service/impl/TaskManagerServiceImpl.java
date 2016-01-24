@@ -175,12 +175,12 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Override
     public List<Task> getTasksForTaskGroup(Long taskGroupId) {
-        List<Task> tasks = new ArrayList<>();
+        Set<Task> tasks = new HashSet<>();
         List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
         for (Relation relation : relations) {
             tasks.add(relation.getTask());
         }
-        return tasks;
+        return new ArrayList<>(tasks);
     }
 
     @Override
