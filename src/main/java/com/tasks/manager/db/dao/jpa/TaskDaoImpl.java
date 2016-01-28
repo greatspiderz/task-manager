@@ -18,7 +18,9 @@ import org.hibernate.criterion.Restrictions;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -128,7 +130,9 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
                 .createAlias("actor", "a")
                 .add( Restrictions.in("a.externalId", searchDto.getActors().stream().map(actor -> actor.getExternalId()).collect(Collectors.toList())) )
                 .add(Restrictions.eq("status", TaskStatus.IN_PROGRESS));
-        return criteria.list();
+        List<Task> tasks = criteria.list();
+        Set<Task> uniqueTasks = new HashSet<>(tasks);
+        return new ArrayList<>(uniqueTasks);
     }
 
     @Override
