@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.envers.Audited;
@@ -33,14 +35,14 @@ public class Task extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private TaskStatus status = TaskStatus.NEW;
 
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "actor_id")
     @JsonProperty(value = "actor_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
     @JsonIdentityReference(alwaysAsId = true)
     private Actor actor;
 
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "subject_id")
     @JsonProperty(value = "subject_id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
@@ -65,12 +67,12 @@ public class Task extends BaseEntity{
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonProperty(value = "task_attributes")
     private List<TaskAttributes> taskAttributes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "task", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonProperty(value = "relation")
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Relation> relations;
 
     @JsonProperty(value = "tenant_id")

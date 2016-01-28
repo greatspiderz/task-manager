@@ -10,6 +10,8 @@ import com.tasks.manager.db.model.entities.Task;
 import com.tasks.manager.db.model.entities.TaskGroup;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
@@ -121,26 +123,12 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
     }
 
     public List<Task> searchActiveTasksForActor(SearchDto searchDto){
-        StringBuilder queryString = new StringBuilder("FROM Task t WHERE status IN (:statuses)");
-        ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
-        List<TaskStatus> activeStatuses = new ArrayList<>();
-        activeStatuses.add(TaskStatus.IN_PROGRESS);
-        namedParamMapBuilder.put("statuses", activeStatuses);
-        List<String> queryParamStringList = new ArrayList<>();
-        if(searchDto.getActors()!=null)
-        {
-            queryString.append(" and ");
-            queryParamStringList.add("actor_id in :actor_ids");
-            namedParamMapBuilder.put("actor_ids", searchDto.getActors().stream().map(actor -> actor.getId()).collect(Collectors.toList()));
-        }
-        ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
-        queryString.append(String.join( " and ", queryParamStringList));
-        List<Task> taskResults = new ArrayList<>();
-        if(namedParamMap.size() > 0) {
-            taskResults = findByQueryAndNamedParams(searchDto.getFirstResult(), searchDto.getMaxResults(),
-                    queryString.toString(), namedParamMap);
-        }
-        return taskResults;
+        Session session = (Session) getEntityManager().getDelegate();
+        Criteria criteria = session.createCriteria(Task.class)
+                .createAlias("actor", "a")
+                .add( Restrictions.in("a.externalId", searchDto.getActors().stream().map(actor -> actor.getExternalId()).collect(Collectors.toList())) )
+                .add(Restrictions.eq("status", TaskStatus.IN_PROGRESS));
+        return criteria.list();
     }
 
     @Override
