@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
+import org.joda.time.DateTime;
 
 
 /**
@@ -199,7 +200,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
     @Override
     public DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId) {
-        return getTaskGraph(taskGroupId);
+        return getTaskGraphs(taskGroupId);
     }
 
     @Override
@@ -357,7 +358,75 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return new ArrayList<>(taskGroups);
     }
 
+    private DirectedGraph<Task, TaskGraphEdge> getTaskGraphs(Long taskGrpId){
+        log.info("Time for fetching the graph : " + DateTime.now());
+        DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
+        log.info("Time for fetching the relations : " + DateTime.now());
+        List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
+        log.info("Time for fetching the relations : " + DateTime.now());
+        Map<Long, Task> taskMap = new HashMap<>();
+        Map<Long, Set<Long>> parentTasksMap = new HashMap<>();
+        for (Relation relation : relations) {
+            log.info("Relation is " + relation.getId());
+        }
+        log.info("Forming the maps : " + DateTime.now());
+        for (Relation relation : relations) {
+            log.info("Forming the maps : " + DateTime.now());
+            Task task = relation.getTask();
+            log.info("Forming the maps : " + DateTime.now());
+            taskMap.put(task.getId(), task);
+            log.info("Forming the maps : " + DateTime.now());
+            if(relation.getParentTaskId()!=null){
+                log.info("Forming the maps : " + DateTime.now());
+                Set<Long> parentTasks = parentTasksMap.get(task.getId());
+                log.info("Forming the maps : " + DateTime.now());
+                if(parentTasks!=null){
+                    log.info("Forming the maps : " + DateTime.now());
+                    parentTasks.add(relation.getParentTaskId());
+                    log.info("Forming the maps : " + DateTime.now());
+                    parentTasksMap.put(task.getId(), parentTasks);
+                    log.info("Forming the maps : " + DateTime.now());
+                }else{
+                    log.info("Forming the maps : " + DateTime.now());
+                    Set<Long> parentTask = new HashSet<>();
+                    log.info("Forming the maps : " + DateTime.now());
+                    parentTask.add(relation.getParentTaskId());
+                    log.info("Forming the maps : " + DateTime.now());
+                    parentTasksMap.put(task.getId(), parentTask);
+                    log.info("Forming the maps : " + DateTime.now());
+                }
+            }
+        }
+        log.info("Forming the maps : " + DateTime.now());
+        List<Long> taskIdsAddedToGraph = new ArrayList<>();
+        for(Task task : taskMap.values()){
+            if (!taskIdsAddedToGraph.contains(task.getId())) {
+                taskGraph.addVertex(task);
+                taskIdsAddedToGraph.add(task.getId());
+            }
+            if(parentTasksMap.get(task.getId())!=null){
+                Set<Long> parentTasks = parentTasksMap.get(task.getId());
+                for(Long parentTaskId : parentTasks){
+                    Task parentTask = taskMap.get(parentTaskId);
+                    if (!taskIdsAddedToGraph.contains(parentTaskId)) {
+                        log.info("adding the vertex: " + DateTime.now());
+                        taskGraph.addVertex(parentTask);
+                        log.info("adding the vertex: " + DateTime.now());
+                        taskIdsAddedToGraph.add(parentTaskId);
+                    }
+                    log.info("adding the edge: " + DateTime.now());
+                    taskGraph.addEdge(parentTask, task);
+                    log.info("adding the egde: " + DateTime.now());
+                }
+            }
+        }
+        log.info("Forming the maps : " + DateTime.now());
+        log.info("Time for fetching the graph : " + DateTime.now());
+        return taskGraph;
+    }
+
     private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
+        log.info("Time for fetching the graph : " + DateTime.now());
         DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
         List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
         List<Task> tasks = new ArrayList<>();
@@ -380,6 +449,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             }
 
         }
+        log.info("Time for fetching the graph : " + DateTime.now());
         return taskGraph;
     }
 
