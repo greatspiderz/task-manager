@@ -337,6 +337,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
+    public List<Task> getAllTasks(List<Long> taskIds) {
+        return taskDao.getAll(taskIds);
+    }
+
+    @Override
     public List<TaskGroup> findActiveTaskGroupsWithAttribute(String attributeName, String attributeValue){
         List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeName, attributeValue);
         List<Task> tasks = new ArrayList<>();

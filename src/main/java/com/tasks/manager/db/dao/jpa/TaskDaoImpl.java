@@ -146,8 +146,12 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
 
     public List<Task> getAll(List<Long> taskIds)
     {
-        Criterion listIdsCriterion = Restrictions.in("id", taskIds);
-        return findByCriteria(listIdsCriterion);
+        Session session = (Session) getEntityManager().getDelegate();
+        Criteria criteria = session.createCriteria(Task.class)
+                .createAlias("actor", "a")
+                .add(Restrictions.in("id", taskIds));
+        List < Task > tasks = criteria.list();
+        return tasks;
     }
 
 }

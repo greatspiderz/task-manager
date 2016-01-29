@@ -55,4 +55,5 @@ public interface TaskManagerService {
     void updateAllActiveTasksStatusInTaskGroup(TaskGroup taskGroup, TaskStatus taskStatus);
     Subject fetchSubjectByExternalId(String externalId);
     void updateTaskAttribute(Task task, String attributeName, String attributeValue);
+    List<Task> getAllTasks(List<Long> taskIds);
 }
