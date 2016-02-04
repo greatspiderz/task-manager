@@ -1,5 +1,5 @@
 
-version = '0.0.126-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'idea'
@@ -74,5 +74,5 @@ task wrapper(type: Wrapper) {
 
 jar {
     baseName = 'task-manager'
-    version = '0.0.126-SNAPSHOT'
+    version = '1.0.0-SNAPSHOT'
 }
