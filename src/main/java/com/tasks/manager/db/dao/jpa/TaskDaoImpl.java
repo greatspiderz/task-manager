@@ -11,6 +11,7 @@ import com.tasks.manager.db.model.entities.TaskGroup;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.dto.SearchDto;
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
@@ -148,8 +149,10 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
     {
         Session session = (Session) getEntityManager().getDelegate();
         Criteria criteria = session.createCriteria(Task.class)
-                .createAlias("actor", "a")
-                .add(Restrictions.in("id", taskIds));
+                .add(Restrictions.in("id", taskIds))
+                .setFetchMode("taskAttributes", FetchMode.JOIN)
+                .setFetchMode("subject", FetchMode.JOIN)
+                .setFetchMode("actor", FetchMode.JOIN);
         List < Task > tasks = criteria.list();
         return tasks;
     }
