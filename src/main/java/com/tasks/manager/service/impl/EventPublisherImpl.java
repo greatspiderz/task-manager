@@ -80,12 +80,21 @@ public class EventPublisherImpl implements EventPublisher {
         publishTaskEvent(taskEvent.getEvent(), taskEvent,taskGroupId);
     }
 
-    private void publishTaskEvent(String eventName, TaskEvent taskEvent, long taskGroupId) {
+    @Override
+    public void publishActorReleaseEvent(Actor actor) {
+        TaskEvent taskEvent = new TaskEvent();
+        taskEvent.setActor(actor);
+        taskEvent.setEvent("ACTOR_RELEASE_EVENT");
+        publishTaskEvent(taskEvent.getEvent(),taskEvent,null);
+    }
+
+    private void publishTaskEvent(String eventName, TaskEvent taskEvent, Long taskGroupId) {
         try {
             Event event = new Event(eventName, objectMapper.writeValueAsString(taskEvent));
             event.setExchangeName(this.restEnv + "." + this.exchangeName);
             event.setExchangeType(OutboundMessage.ExchangeType.topic.name());
-            event.setGroupId(Long.toString(taskGroupId));
+            if(taskGroupId!=null)
+                event.setGroupId(taskGroupId.toString());
             sender.publish(event);
         } catch (IOException e) {
             log.error("Exception found while publishing event to RestBus", e.getMessage());

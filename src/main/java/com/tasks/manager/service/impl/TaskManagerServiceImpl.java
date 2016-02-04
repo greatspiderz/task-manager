@@ -342,6 +342,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
+    public void releaseActor(Actor actor) {
+        eventPublisher.publishActorReleaseEvent(actor);
+    }
+
+    @Override
     public List<TaskGroup> findActiveTaskGroupsWithAttribute(String attributeName, String attributeValue){
         List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeName, attributeValue);
         List<Task> tasks = new ArrayList<>();

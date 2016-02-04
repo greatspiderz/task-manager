@@ -19,4 +19,5 @@ public interface EventPublisher {
     void publishTaskStatusChangeEvent(Task task, TaskStatus oldStatus);
     void publishTaskAttributeChangeEvent(Task task, List<TaskAttributes> oldAttributes);
     void publishActorAssignmentEvent(Task task, Actor oldActor);
+    void publishActorReleaseEvent(Actor actor);
 }

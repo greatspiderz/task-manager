@@ -56,4 +56,5 @@ public interface TaskManagerService {
     Subject fetchSubjectByExternalId(String externalId);
     void updateTaskAttribute(Task task, String attributeName, String attributeValue);
     List<Task> getAllTasks(List<Long> taskIds);
+    void releaseActor(Actor actor);
 }
