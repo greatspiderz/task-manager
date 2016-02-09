@@ -132,7 +132,8 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
             taskResults = findByQueryAndNamedParams(searchDto.getFirstResult(), searchDto.getMaxResults(),
                     queryString.toString(), namedParamMap);
         }
-        return taskResults;
+        Set<Task> tasksSet = new HashSet<>(taskResults);
+        return new ArrayList<>(tasksSet);
     }
 
     public List<Task> searchActiveTasksForActor(SearchDto searchDto){
