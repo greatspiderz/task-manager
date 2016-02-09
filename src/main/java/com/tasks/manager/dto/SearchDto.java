@@ -8,6 +8,7 @@ import io.dropwizard.jackson.JsonSnakeCase;
 import lombok.Data;
 import org.joda.time.DateTime;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,14 +18,22 @@ import java.util.List;
 @JsonSnakeCase
 public class SearchDto {
 
-    TaskStatus status;
-    String type;
-    Integer level;
-    List<Actor> actors;
-    Subject subject;
-    String tenant;
+    private List<TaskStatus> statuses = new ArrayList<>();
+    private DateTime fromDate;
+    private DateTime toDate;
+
+    //TODO: To be deprecated later
+    private TaskStatus status;
+    private DateTime createdAt;
+
+
+    private String type;
+    private Integer level;
+    private List<Actor> actors;
+    private Subject subject;
+    private String tenant;
     private Integer firstResult;
     private Integer maxResults;
-    private DateTime createdAt;
     private TaskAttributes taskAttributes;
+
 }

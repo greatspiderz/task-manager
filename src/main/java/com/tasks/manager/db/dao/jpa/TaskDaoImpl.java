@@ -71,44 +71,54 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         throw new TaskNotFoundException(id);
     }
 
-    public List<Task> search(SearchDto searchDto)
-    {
+    public List<Task> search(SearchDto searchDto) {
         StringBuilder queryString = new StringBuilder("select t from Task t, TaskAttributes ta");
         ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
 
         queryString.append(" where t = ta.task and ");
         List<String> queryParamStringList = new ArrayList<>();
-        if(searchDto.getStatus()!=null)
-        {
+
+        //TODO: remove this
+        if (searchDto.getStatus() != null) {
             queryParamStringList.add("t.status = :status");
             namedParamMapBuilder.put("status", searchDto.getStatus());
         }
 
-        if(searchDto.getType()!=null)
-        {
+        if (searchDto.getStatuses().size() > 0) {
+            queryParamStringList.add("t.status in :task_statuses");
+            namedParamMapBuilder.put("task_statuses", searchDto.getStatuses());
+        }
+
+        if (searchDto.getFromDate() != null && searchDto.getToDate() != null) {
+            queryParamStringList.add("t.createdAt between :createdAtStart and :createdAtEnd");
+            namedParamMapBuilder.put("createdAtStart", searchDto.getFromDate());
+            namedParamMapBuilder.put("createdAtEnd", searchDto.getToDate());
+        }
+
+        if (searchDto.getType() != null) {
             queryParamStringList.add("t.type = :type");
             namedParamMapBuilder.put("type", searchDto.getType());
         }
 
-        if(searchDto.getActors()!=null)
-        {
+        if (searchDto.getActors() != null) {
             queryParamStringList.add("t.actor.externalId in :actor_ids");
             namedParamMapBuilder.put("actor_ids", searchDto.getActors().stream().map(actor -> actor.getExternalId()).collect(Collectors.toList()));
         }
-        if(searchDto.getSubject()!=null){
+        if (searchDto.getSubject() != null) {
             queryParamStringList.add("t.subject.externalId = :subject_id");
             namedParamMapBuilder.put("subject_id", searchDto.getSubject().getExternalId());
         }
-        if(searchDto.getTenant()!=null) {
+        if (searchDto.getTenant() != null) {
             queryParamStringList.add("t.tenantId = :tenant_id");
             namedParamMapBuilder.put("tenant_id", searchDto.getTenant());
         }
-        if(searchDto.getCreatedAt() != null) {
+        //TODO: Remove after migrationunt
+        if (searchDto.getCreatedAt() != null) {
             queryParamStringList.add("t.createdAt between :createdAtStart and :createdAtEnd");
             namedParamMapBuilder.put("createdAtStart", searchDto.getCreatedAt().withTimeAtStartOfDay());
             namedParamMapBuilder.put("createdAtEnd", searchDto.getCreatedAt().withTimeAtStartOfDay().plusDays(1));
         }
-        if(searchDto.getTaskAttributes() != null) {
+        if (searchDto.getTaskAttributes() != null) {
             queryParamStringList.add("ta.attributeName = :taskAttributeName");
             namedParamMapBuilder.put("taskAttributeName", searchDto.getTaskAttributes().getAttributeName());
             queryParamStringList.add("ta.attributeValue = :taskAttributeValue");
@@ -116,9 +126,9 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
         }
 
         ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
-        queryString.append(String.join( " and ", queryParamStringList));
+        queryString.append(String.join(" and ", queryParamStringList));
         List<Task> taskResults = new ArrayList<>();
-        if(namedParamMap.size() > 0) {
+        if (namedParamMap.size() > 0) {
             taskResults = findByQueryAndNamedParams(searchDto.getFirstResult(), searchDto.getMaxResults(),
                     queryString.toString(), namedParamMap);
         }
