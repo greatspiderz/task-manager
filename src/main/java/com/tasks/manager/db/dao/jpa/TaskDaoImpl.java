@@ -148,6 +148,18 @@ public class TaskDaoImpl extends BaseDaoImpl<Task> implements TaskDao{
     }
 
     @Override
+    public List<Task> searchActiveTasksForSubject(SearchDto searchDto){
+        Session session = (Session) getEntityManager().getDelegate();
+        Criteria criteria = session.createCriteria(Task.class)
+                .createAlias("subject", "s")
+                .add( Restrictions.eq("s.externalId", searchDto.getSubject().getExternalId()))
+                .add(Restrictions.eq("status", TaskStatus.IN_PROGRESS));
+        List<Task> tasks = criteria.list();
+        Set<Task> uniqueTasks = new HashSet<>(tasks);
+        return new ArrayList<>(uniqueTasks);
+    }
+
+    @Override
     public List<Task> fetchBySubjectId(Long subjectId){
         StringBuilder queryString = new StringBuilder("FROM Task a WHERE subject_id = (:subject_id)");
         ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();

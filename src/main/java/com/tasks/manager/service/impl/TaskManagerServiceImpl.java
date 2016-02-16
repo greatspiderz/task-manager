@@ -232,8 +232,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         Subject subject = new Subject();
         subject.setExternalId(externalId);
         searchDto.setSubject(subject);
-        List<Task> tasks = taskDao.search(searchDto);
-        return tasks.stream().filter(task -> TaskManagerUtility.isTaskActive(task.getStatus())).collect(Collectors.toList());
+        return taskDao.searchActiveTasksForSubject(searchDto);
     }
 
 
