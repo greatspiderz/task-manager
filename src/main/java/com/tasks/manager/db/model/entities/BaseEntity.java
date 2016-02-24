@@ -38,12 +38,12 @@ public class BaseEntity {
     private Long version;
 
     @Column(name = "created_at")
-    @JsonIgnore
+    @JsonProperty(value = "created_at")
     @Convert(converter = JodaDateTimeConverter.class)
     private DateTime createdAt;
 
     @Column(name = "updated_at")
-    @JsonIgnore
+    @JsonProperty(value = "updated_at")
     @Convert(converter = JodaDateTimeConverter.class)
     private DateTime updatedAt;
 }
