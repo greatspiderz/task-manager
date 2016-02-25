@@ -1,6 +1,7 @@
 package com.tasks.manager.service.api;
 
 import com.google.inject.ImplementedBy;
+import com.tasks.manager.db.exception.IllegalTaskStateTransitionException;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
@@ -34,7 +35,7 @@ public interface TaskManagerService {
     Actor createActor(Actor actor);
     Actor fetchActorByExternalId(String actorId);
 
-    void updateStatus( Long taskId, TaskTriggerEnum triggerEnum) throws TaskNotFoundException;
+    void updateStatus( Long taskId, TaskTriggerEnum triggerEnum) throws TaskNotFoundException, IllegalTaskStateTransitionException;
 
     void updateETA( Long taskId, Long eta) throws TaskNotFoundException;
 

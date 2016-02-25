@@ -7,6 +7,7 @@ import com.google.inject.persist.Transactional;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.tasks.manager.BindingClassForTests;
 import com.tasks.manager.db.dao.jpa.BaseDaoImpl;
+import com.tasks.manager.db.exception.IllegalTaskStateTransitionException;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
@@ -118,7 +119,7 @@ public class TaskManagerServiceImplTest {
         try{
             taskManagerService.updateStatus(task.getId(), triggerEnum);
         }
-        catch(TaskNotFoundException e){
+        catch(TaskNotFoundException | IllegalTaskStateTransitionException e){
             fail("Exception thrown on updating actor");
         }
         Task updatedTask = taskManagerService.fetchTask(task.getId());

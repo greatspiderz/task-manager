@@ -5,6 +5,7 @@ import com.github.oxo42.stateless4j.StateMachineConfig;
 import com.google.inject.Inject;
 import com.tasks.manager.db.dao.interfaces.*;
 
+import com.tasks.manager.db.exception.IllegalTaskStateTransitionException;
 import com.tasks.manager.db.exception.TaskNotFoundException;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
@@ -146,7 +147,7 @@ public class TaskManagerServiceImpl implements TaskManagerService {
     }
 
     @Override
-    public void updateStatus(Long taskId, TaskTriggerEnum trigger) throws TaskNotFoundException {
+    public void updateStatus(Long taskId, TaskTriggerEnum trigger) throws TaskNotFoundException, IllegalTaskStateTransitionException {
         Task task = fetchTask(taskId);
         TaskStatus newStatus = updateTaskStateMachine(task, trigger);
         TaskStatus fromTaskStatus = task.getStatus();
@@ -155,11 +156,15 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         eventPublisher.publishTaskStatusChangeEvent(task, fromTaskStatus);
     }
 
-    private TaskStatus updateTaskStateMachine(Task task, TaskTriggerEnum trigger) {
-        log.info("updating status of task " + task.getId() + " with trigger " + trigger);
-        StateMachine<TaskStatus, TaskTriggerEnum> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
-        stateMachine.fire(trigger);
-        return stateMachine.getState();
+    private TaskStatus updateTaskStateMachine(Task task, TaskTriggerEnum trigger) throws IllegalTaskStateTransitionException {
+        try {
+            log.info("updating status of task " + task.getId() + " with trigger " + trigger);
+            StateMachine<TaskStatus, TaskTriggerEnum> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
+            stateMachine.fire(trigger);
+            return stateMachine.getState();
+        } catch (Exception e) {
+            throw new IllegalTaskStateTransitionException(task.getId(), task.getStatus(), trigger);
+        }
     }
 
     //Remove
