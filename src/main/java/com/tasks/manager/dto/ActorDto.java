@@ -11,6 +11,7 @@ import javax.persistence.Column;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ActorDto {
+    @JsonProperty(value = "type")
     private String type;
 
     @JsonProperty(value = "external_id")

@@ -9,6 +9,7 @@ import com.tasks.manager.db.model.entities.Subject;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SubjectDto {
+    @JsonProperty(value = "type")
     private String type;
 
     @JsonProperty(value = "external_id")
