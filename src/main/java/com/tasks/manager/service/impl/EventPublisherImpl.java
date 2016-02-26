@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 import com.tasks.manager.db.dao.interfaces.TaskDao;
 import com.tasks.manager.db.model.entities.*;
 import com.tasks.manager.db.model.enums.TaskStatus;
+import com.tasks.manager.dto.ActorDto;
+import com.tasks.manager.dto.TaskAttributeDto;
 import com.tasks.manager.dto.TaskEvent;
 import com.tasks.manager.service.api.EventPublisher;
 import com.tasks.manager.util.EventUtils;
@@ -63,8 +65,11 @@ public class EventPublisherImpl implements EventPublisher {
     @Override
     public void publishTaskAttributeChangeEvent(Task task, List<TaskAttributes> oldAttributes) {
         Set<Subject> subjects = getSubjects(task);
-        TaskEvent taskEvent = EventUtils.getTaskEvent(task,subjects);
-        taskEvent.setOldAttributes(oldAttributes);
+        TaskEvent taskEvent = EventUtils.getTaskEvent(task, subjects);
+        List<TaskAttributeDto> attributeDtos = new ArrayList<>();
+        for(TaskAttributes taskAttributes : oldAttributes)
+            attributeDtos.add(new TaskAttributeDto(taskAttributes));
+        taskEvent.setOldAttributes(attributeDtos);
         taskEvent.setEvent("TASK_ATTRIBUTE_CHANGE_EVENT");
         long taskGroupId = task.getRelations().get(0).getTaskGroup().getId();
         publishTaskEvent(taskEvent.getEvent(), taskEvent,taskGroupId);
@@ -74,7 +79,7 @@ public class EventPublisherImpl implements EventPublisher {
     public void publishActorAssignmentEvent(Task task, Actor oldActor) {
         Set<Subject> subjects = getSubjects(task);
         TaskEvent taskEvent = EventUtils.getTaskEvent(task,subjects);
-        taskEvent.setOldActor(oldActor);
+        taskEvent.setOldActor(new ActorDto(oldActor));
         taskEvent.setEvent("ACTOR_ASSIGNMENT_EVENT");
         long taskGroupId = task.getRelations().get(0).getTaskGroup().getId();
         publishTaskEvent(taskEvent.getEvent(), taskEvent,taskGroupId);
@@ -83,7 +88,7 @@ public class EventPublisherImpl implements EventPublisher {
     @Override
     public void publishActorReleaseEvent(Actor actor) {
         TaskEvent taskEvent = new TaskEvent();
-        taskEvent.setActor(actor);
+        taskEvent.setActor(new ActorDto(actor));
         taskEvent.setEvent("ACTOR_RELEASE_EVENT");
         publishTaskEvent(taskEvent.getEvent(),taskEvent,null);
     }

@@ -31,27 +31,25 @@ public class TaskEvent {
     private String taskType;
 
     @JsonProperty("subjects")
-    private List<Subject> subjects;
+    private List<SubjectDto> subjects;
 
     @JsonProperty("actor")
-    private Actor actor;
+    private ActorDto actor;
 
     @JsonProperty("status")
     private TaskStatus status;
 
     @JsonProperty("attributes")
-    private List<TaskAttributes> attributes;
-
+    private List<TaskAttributeDto> attributes;
 
     @JsonProperty("old_status")
     private TaskStatus oldStatus;
 
     @JsonProperty("old_attributes")
-    private List<TaskAttributes> oldAttributes;
+    private List<TaskAttributeDto> oldAttributes;
 
     @JsonProperty("old_actor")
-    private Actor oldActor;
-
+    private ActorDto oldActor;
 
     @JsonIgnore
     private DateTime eventDate;
