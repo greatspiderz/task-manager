@@ -40,6 +40,9 @@ public class StateMachineProvider implements Provider<StateMachineConfig> {
         taskStateMachineConfig.configure(TaskStatus.COMPLETED)
                 .ignore(TaskTriggerEnum.COMPLETE);
 
+        taskStateMachineConfig.configure(TaskStatus.INCOMPLETED)
+                .ignore(TaskTriggerEnum.IN_COMPLETE);
+
         return taskStateMachineConfig;
 
     }
