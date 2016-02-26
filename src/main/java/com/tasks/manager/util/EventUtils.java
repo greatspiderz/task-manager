@@ -23,15 +23,19 @@ public class EventUtils {
         taskEvent.setTaskId(task.getId());
         taskEvent.setActor(new ActorDto(task.getActor()));
         taskEvent.setStatus(task.getStatus());
-        List<TaskAttributeDto> taskAttributeDtos = new ArrayList<>();
-        for(TaskAttributes taskAttributes : task.getTaskAttributes())
-            taskAttributeDtos.add(new TaskAttributeDto(taskAttributes));
-        taskEvent.setAttributes(taskAttributeDtos);
+        if(task.getTaskAttributes()!=null && task.getTaskAttributes().size() > 0) {
+            List<TaskAttributeDto> taskAttributeDtos = new ArrayList<>();
+            for (TaskAttributes taskAttributes : task.getTaskAttributes())
+                taskAttributeDtos.add(new TaskAttributeDto(taskAttributes));
+            taskEvent.setAttributes(taskAttributeDtos);
+        }
         taskEvent.setEventDate(DateTime.now());
         List<SubjectDto> subjectDtos = new ArrayList<>();
-        for(Subject subject : subjects)
-            subjectDtos.add(new SubjectDto(subject));
-        taskEvent.setSubjects(subjectDtos);
+        if(subjects != null && subjects.size() > 0) {
+            for (Subject subject : subjects)
+                subjectDtos.add(new SubjectDto(subject));
+            taskEvent.setSubjects(subjectDtos);
+        }
         return taskEvent;
     }
 }
