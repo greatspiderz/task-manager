@@ -18,7 +18,9 @@ public class ActorDto {
     private String externalId;
 
     public ActorDto(Actor actor) {
-        this.type = actor.getType();
-        this.externalId = actor.getExternalId();
+        if(actor != null) {
+            this.type = actor.getType();
+            this.externalId = actor.getExternalId();
+        }
     }
 }

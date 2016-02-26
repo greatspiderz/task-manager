@@ -16,7 +16,9 @@ public class SubjectDto {
     private String externalId;
 
     public SubjectDto(Subject subject) {
-        this.type = subject.getType();
-        this.externalId = subject.getExternalId();
+        if(subject != null) {
+            this.type = subject.getType();
+            this.externalId = subject.getExternalId();
+        }
     }
 }

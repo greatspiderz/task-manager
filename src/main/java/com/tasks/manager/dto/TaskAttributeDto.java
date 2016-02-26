@@ -16,7 +16,9 @@ public class TaskAttributeDto {
     private String attributeValue;
 
     public TaskAttributeDto(TaskAttributes taskAttributes) {
-        this.attributeName = taskAttributes.getAttributeName();
-        this.attributeValue = taskAttributes.getAttributeValue();
+        if(taskAttributes != null) {
+            this.attributeName = taskAttributes.getAttributeName();
+            this.attributeValue = taskAttributes.getAttributeValue();
+        }
     }
 }
