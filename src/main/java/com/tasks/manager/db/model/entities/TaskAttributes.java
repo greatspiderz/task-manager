@@ -1,10 +1,7 @@
 package com.tasks.manager.db.model.entities;
 
 import com.fasterxml.jackson.annotation.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -16,6 +13,7 @@ import javax.persistence.*;
 @Table(name = "task_attributes")
 @EqualsAndHashCode(callSuper=false, exclude = {"task"})
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ToString(callSuper = true, exclude = {"task"})
 public class TaskAttributes extends BaseEntity{
 
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)

@@ -3,10 +3,7 @@ package com.tasks.manager.db.model.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -20,6 +17,7 @@ import java.util.List;
 @Table(name = "actor")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper=true)
+@ToString(callSuper = true, exclude = {"associatedTasks"})
 public class Actor extends BaseEntity{
 
     @Column(name = "type")

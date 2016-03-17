@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import javax.validation.constraints.NotNull;
 import com.tasks.manager.db.model.enums.TaskStatus;
 import com.tasks.manager.util.JodaDateTimeConverter;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollection;
@@ -27,6 +24,7 @@ import java.util.List;
 @Table(name = "task")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper=true, of = {"type"})
+@ToString(callSuper = true, exclude = {"relations"})
 public class Task extends BaseEntity{
 
     @NotNull

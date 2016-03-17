@@ -3,10 +3,7 @@ package com.tasks.manager.db.model.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.inject.persist.Transactional;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -20,6 +17,7 @@ import java.util.List;
 @Table(name = "task_group")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper=true, exclude = {"relations"})
+@ToString(callSuper = true, exclude = {"relations"})
 public class TaskGroup extends BaseEntity{
 
     @OneToMany(mappedBy = "taskGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -29,5 +27,4 @@ public class TaskGroup extends BaseEntity{
     @Column
     @JsonProperty
     private String type;
-
 }

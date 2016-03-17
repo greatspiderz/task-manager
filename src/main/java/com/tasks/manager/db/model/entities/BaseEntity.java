@@ -10,10 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.model.listeners.BaseEntityListener;
 import com.tasks.manager.util.JodaDateTimeConverter;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.joda.time.DateTime;
 
 import javax.persistence.*;
@@ -24,6 +21,7 @@ import java.io.Serializable;
 @EntityListeners(BaseEntityListener.class)
 @EqualsAndHashCode(of = {"id"})
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ToString(callSuper = true, exclude = {"createdAt","updatedAt"})
 public class BaseEntity {
 
     @Id
