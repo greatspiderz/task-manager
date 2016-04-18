@@ -1,6 +1,7 @@
 package com.tasks.manager.db.model.listeners;
 
 import com.tasks.manager.db.model.entities.BaseEntity;
+
 import org.joda.time.DateTime;
 
 import javax.persistence.PrePersist;

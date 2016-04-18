@@ -1,38 +1,37 @@
 package com.tasks.manager.db.dao.jpa;
 
-import com.fasterxml.jackson.databind.deser.Deserializers;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.dao.interfaces.BaseDao;
-import lombok.extern.slf4j.Slf4j;
+import com.tasks.manager.db.model.entities.BaseEntity;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.validation.constraints.NotNull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import com.tasks.manager.db.model.entities.*;
-import org.hibernate.proxy.HibernateProxyHelper;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.validation.constraints.NotNull;
+
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by shlok.chaurasia on 05/11/15.
  */
 @Slf4j
+@NoArgsConstructor
 public class BaseDaoImpl<T> implements BaseDao<T> {
 
-    private final Provider<EntityManager> entityManagerProvider;
     protected Class<T> entityClass;
+    private EntityManager entityManager;
 
-    @Inject
-    public BaseDaoImpl(Provider<EntityManager> entityManagerProvider) {
-        this.entityManagerProvider = entityManagerProvider;
+    public BaseDaoImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -98,7 +97,7 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
 
     @Override
     public EntityManager getEntityManager() {
-        return entityManagerProvider.get();
+        return this.entityManager;
     }
 
     protected List<T> findByCriteria(final Criterion... criterion) {
@@ -112,13 +111,6 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
         return result;
     }
 
-    @Override
-    public int executeQuery(final String queryStr)
-    {
-        Query query = getEntityManager().createNativeQuery(queryStr);
-
-        return query.executeUpdate();
-    }
 
     @Override
     public List<T> findByQueryAndNamedParams(final Integer firstResult, final Integer maxResults,

@@ -1,28 +1,30 @@
 package com.tasks.manager.util;
 
-import com.tasks.manager.db.model.entities.*;
-import com.tasks.manager.db.model.enums.TaskStatus;
+import com.tasks.manager.db.model.entities.Relation;
+import com.tasks.manager.db.model.entities.Task;
+import com.tasks.manager.db.model.entities.TaskAttributes;
+import com.tasks.manager.db.model.entities.TaskGroup;
+import com.tasks.manager.enums.TaskStatusEnum;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by shlok.chaurasia on 19/11/15.
+ * Created by palash.v on 04/03/16.
  */
 public class TaskManagerUtility {
-    private static List<TaskStatus> nonActiveTaskStatuses = new ArrayList<TaskStatus>(){{
-        add(TaskStatus.CANCELLED);
-        add(TaskStatus.CANCELLED_AND_MERGED);
-        add(TaskStatus.NON_EXECUTABLE);
+
+    private static List<TaskStatusEnum> nonActiveTaskStatuses = new ArrayList<TaskStatusEnum>(){{
+        add(TaskStatusEnum.CANCELLED);
+        add(TaskStatusEnum.CANCELLED_AND_MERGED);
+        add(TaskStatusEnum.NON_EXECUTABLE);
     }};
 
-    public static boolean isTaskActive(TaskStatus taskStatus)
-    {
+    public static boolean isTaskActive(TaskStatusEnum taskStatus) {
         return !nonActiveTaskStatuses.contains(taskStatus);
     }
 
-    public static TaskGroup bindRelation(Task task, TaskGroup taskGroup, Long parentTaskId)
-    {
+    public static TaskGroup bindRelation(Task task, TaskGroup taskGroup, Long parentTaskId) {
         Relation relation = new Relation();
         relation.setTaskGroup(taskGroup);
         relation.setTask(task);
@@ -42,14 +44,13 @@ public class TaskManagerUtility {
         Task newTask = new Task();
         newTask.setStatus(task.getStatus());
         newTask.setActor(task.getActor());
-        newTask.setSubject(task.getSubject());
+        newTask.setTaskSubjectRelations(task.getTaskSubjectRelations());
         newTask.setType(task.getType());
         newTask.setStartTime(task.getStartTime());
         newTask.setEndTime(task.getEndTime());
         newTask.setEta(task.getEta());
         newTask.setDescription(task.getDescription());
-        for(TaskAttributes tskattr: task.getTaskAttributes())
-        {
+        for(TaskAttributes tskattr: task.getTaskAttributes()) {
             tskattr.setTask(newTask);
         }
         newTask.setTaskAttributes(task.getTaskAttributes());

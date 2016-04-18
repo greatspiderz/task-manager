@@ -10,5 +10,4 @@ public enum TaskTriggerEnum {
     IN_COMPLETE,
     NON_EXECUTABLE,
     START;
-
 }

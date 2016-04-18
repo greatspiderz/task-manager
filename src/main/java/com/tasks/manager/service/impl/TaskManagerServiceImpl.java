@@ -1,165 +1,197 @@
 package com.tasks.manager.service.impl;
 
+import com.google.inject.Inject;
+
 import com.github.oxo42.stateless4j.StateMachine;
 import com.github.oxo42.stateless4j.StateMachineConfig;
-import com.google.inject.Inject;
-import com.tasks.manager.db.dao.interfaces.*;
-
+import com.tasks.manager.db.dao.interfaces.ActorDao;
+import com.tasks.manager.db.dao.interfaces.RelationDao;
+import com.tasks.manager.db.dao.interfaces.SubjectDao;
+import com.tasks.manager.db.dao.interfaces.TaskDao;
+import com.tasks.manager.db.dao.interfaces.TaskGroupDao;
+import com.tasks.manager.db.dao.interfaces.TaskSubjectRelationDao;
 import com.tasks.manager.db.exception.IllegalTaskStateTransitionException;
 import com.tasks.manager.db.exception.TaskNotFoundException;
-import com.tasks.manager.db.model.entities.*;
-import com.tasks.manager.db.model.enums.TaskStatus;
-import com.tasks.manager.dto.SearchDto;
+import com.tasks.manager.db.model.entities.Actor;
+import com.tasks.manager.db.model.entities.Relation;
+import com.tasks.manager.db.model.entities.Subject;
+import com.tasks.manager.db.model.entities.Task;
+import com.tasks.manager.db.model.entities.TaskAttributes;
+import com.tasks.manager.db.model.entities.TaskGroup;
+import com.tasks.manager.db.model.entities.TaskSubjectRelation;
+import com.tasks.manager.dto.AddRelationDto;
+import com.tasks.manager.dto.AddSubjectsDto;
+import com.tasks.manager.dto.CreateTaskDto;
+import com.tasks.manager.dto.SearchActorDto;
+import com.tasks.manager.dto.SearchSubjectDto;
+import com.tasks.manager.dto.SearchTaskDto;
+import com.tasks.manager.dto.SearchTaskGroupDto;
 import com.tasks.manager.dto.TaskGraphEdge;
-import com.tasks.manager.enums.TaskEventType;
+import com.tasks.manager.dto.UpdateRelationDto;
+import com.tasks.manager.dto.UpdateSubjectDto;
+import com.tasks.manager.dto.UpdateTaskDto;
+import com.tasks.manager.enums.TaskStatusEnum;
 import com.tasks.manager.enums.TaskTriggerEnum;
 import com.tasks.manager.service.api.EventPublisher;
 import com.tasks.manager.service.api.TaskManagerService;
 import com.tasks.manager.util.StateMachineProvider;
-import com.tasks.manager.util.EventUtils;
-import com.tasks.manager.util.TaskManagerUtility;
-import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.util.*;
+import org.apache.commons.collections.ListUtils;
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
-import org.joda.time.DateTime;
-
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Created by divya.rai on 05/11/15.
+ * Created by palash.v on 17/02/16.
  */
 @Slf4j
 public class TaskManagerServiceImpl implements TaskManagerService {
 
     private final TaskDao taskDao;
     private final TaskGroupDao taskGroupDao;
-    private final TaskAttributesDao taskAttributesDao;
     private final RelationDao relationDao;
     private final SubjectDao subjectDao;
     private final ActorDao actorDao;
+    private final TaskSubjectRelationDao taskSubjectRelationDao;
     private final StateMachineConfig taskStateMachineConfig;
     private final EventPublisher eventPublisher;
 
     @Inject
     public TaskManagerServiceImpl(TaskDao taskDao,
                                   TaskGroupDao taskGroupDao,
-                                  TaskAttributesDao taskAttributesDao,
-                                  StateMachineProvider stateMachineProvider, RelationDao relationDao,
-                                  SubjectDao subjectDao, ActorDao actorDao,
-                                  EventPublisher eventPublisher
-    ) {
+                                  RelationDao relationDao,
+                                  SubjectDao subjectDao,
+                                  ActorDao actorDao,
+                                  TaskSubjectRelationDao taskSubjectRelationDao,
+                                  StateMachineProvider stateMachineProvider,
+                                  EventPublisher eventPublisher) {
         this.taskDao = taskDao;
         this.taskGroupDao = taskGroupDao;
-        this.taskAttributesDao = taskAttributesDao;
         this.relationDao = relationDao;
-        this.taskStateMachineConfig = stateMachineProvider.get();
         this.subjectDao = subjectDao;
         this.actorDao = actorDao;
+        this.taskSubjectRelationDao = taskSubjectRelationDao;
         this.eventPublisher = eventPublisher;
+        this.taskStateMachineConfig = stateMachineProvider.get();
     }
 
     @Override
-    public TaskGroup createTaskGroup(TaskGroup taskgroup) {
-        taskGroupDao.save(taskgroup);
-        return taskgroup;
-    }
+    public List<Task> createTasks(List<CreateTaskDto> taskCreateInput) {
 
-    @Override
-    public TaskGroup fetchTaskGroup(long tgId) {
-        return taskGroupDao.fetchById(tgId);
-    }
+        List<Task> tasks = new ArrayList<>();
 
-    @Override
-    public Task createTask(Task task, long tgId) {
-        TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
-        Relation relation = new Relation();
-        taskDao.save(task);
-        relation.setTaskGroup(taskGroup);
-        relation.setTask(task);
-        if (task.getRelations() == null)
-            task.setRelations(new ArrayList<>());
-        if (taskGroup.getRelations() == null)
-            taskGroup.setRelations(new ArrayList<>());
-        task.getRelations().add(relation);
-        taskGroup.getRelations().add(relation);
-        relationDao.save(relation);
-        eventPublisher.publishTaskCreationEvent(task);
-        return task;
-    }
+        for (CreateTaskDto createTaskDto : taskCreateInput) {
+            Set<Relation> relations = new HashSet<>();
+            log.info("Creating new Task");
+            Task inputTask = createTaskDto.getTask();
 
-
-    @Override
-    public Task createTaskWithParentTasks(Task task, long tgId, List<Long> parentTaskIds) {
-        TaskGroup taskGroup = taskGroupDao.fetchById(tgId);
-        taskDao.save(task);
-        for (Long parentTaskId : parentTaskIds) {
+            TaskGroup taskGroup = createTaskDto.getTaskGroup();
+            if (taskGroup == null) {
+                taskGroup = new TaskGroup();
+                taskGroupDao.save(taskGroup);
+            }
+            else if(taskGroup.getId() == null){
+                taskGroupDao.save(taskGroup);
+            }
             Relation relation = new Relation();
+            relation.setTask(inputTask);
             relation.setTaskGroup(taskGroup);
-            relation.setTask(task);
-            relation.setParentTaskId(parentTaskId);
-            if (task.getRelations() == null)
-                task.setRelations(new ArrayList<>());
-            if (taskGroup.getRelations() == null)
+            relations.add(relation);
+
+            if (inputTask.getRelations() == null ) {
+                inputTask.setRelations(new ArrayList<>());
+            }
+            if (taskGroup.getRelations() == null ) {
                 taskGroup.setRelations(new ArrayList<>());
-            task.getRelations().add(relation);
-            taskGroup.getRelations().add(relation);
-            relationDao.save(relation);
+            }
+            inputTask.getRelations().addAll(relations);
+            taskGroup.getRelations().addAll(relations);
+            tasks.add(inputTask);
+
+            eventPublisher.publishTaskCreationEvent(inputTask);
         }
-        return task;
+
+        taskDao.bulkInsert(tasks);
+        return tasks;
     }
 
+    /**
+     * Update Tasks in Bulk
+     */
     @Override
-    public Task fetchTask(long taskId) {
-        return taskDao.fetchById(taskId);
+    public List<Task> updateTasks(List<UpdateTaskDto> taskUpdateInput) throws TaskNotFoundException, IllegalTaskStateTransitionException {
+        List<Task> updatedTasks = new ArrayList<>();
+        for (UpdateTaskDto updateTaskDto : taskUpdateInput) {
+            Task currentTask = taskDao.fetchById(updateTaskDto.getTaskId());
+            if (currentTask != null) {
+                log.info("Updating Task " + currentTask.getId());
+                if (updateTaskDto.getActor() != null) {
+                    Actor oldActor = currentTask.getActor();
+                    Actor actor = updateTaskDto.getActor();
+                    log.info("New actor: " + actor.toString());
+                    actor.getAssociatedTasks().add(currentTask);
+                    if (actor.getId() == null) {
+                        actorDao.save(actor);
+                    }
+                    currentTask.setActor(actor);
+                    eventPublisher.publishActorAssignmentEvent(currentTask, oldActor);
+                }
+                if (updateTaskDto.getTaskAttributes() != null && updateTaskDto.getTaskAttributes().size() > 0) {
+                    List<TaskAttributes> oldAttributes = new ArrayList<>(currentTask.getTaskAttributes());
+                    for (TaskAttributes taskAttributes : currentTask.getTaskAttributes()) {
+                        taskAttributes.setTask(null);
+                    }
+                    currentTask.setTaskAttributes(updateTaskDto.getTaskAttributes());
+                    log.info("New TaskAttributes: " + updateTaskDto.getTaskAttributes().toString());
+                    for (TaskAttributes taskAttributes : currentTask.getTaskAttributes()) {
+                        taskAttributes.setTask(currentTask);
+                    }
+                    eventPublisher.publishTaskAttributeChangeEvent(currentTask, oldAttributes);
+                }
+                if (updateTaskDto.getTaskTriggerEnum() != null) {
+                    TaskStatusEnum oldStatus = currentTask.getStatus();
+                    log.info("New TaskTrigger: " + updateTaskDto.getTaskTriggerEnum());
+                    TaskStatusEnum newStatus = updateTaskStateMachine(currentTask, updateTaskDto.getTaskTriggerEnum());
+                    currentTask.setStatus(newStatus);
+                    eventPublisher.publishTaskStatusChangeEvent(currentTask, oldStatus);
+                }
+                if (updateTaskDto.getType() != null) {
+                    String oldType = currentTask.getType();
+                    log.info("New TaskType: " + updateTaskDto.getType());
+                    currentTask.setType(updateTaskDto.getType());
+                    eventPublisher.publishTaskTypeChangeEvent(currentTask, oldType);
+                }
+                if (updateTaskDto.getTaskGroupId() != null) {
+                    TaskGroup oldTaskGroup = currentTask.getRelations().get(0).getTaskGroup();
+                    List<Long> oldParentIds = currentTask.getRelations().stream().map(r -> r.getParentTaskId()).collect(Collectors.toList());
+                    log.info("New TaskGroup: " + updateTaskDto.getTaskGroupId());
+                    currentTask.getRelations().forEach(relation -> relation.setTaskGroup(taskGroupDao.fetchById(updateTaskDto.getTaskGroupId())));
+                    eventPublisher.publishTaskGroupChangeEvent(currentTask, oldTaskGroup);
+                    eventPublisher.publishTaskRelationChangeEvent(currentTask, oldParentIds);
+                }
+            }
+            else {
+                throw new TaskNotFoundException(updateTaskDto.getTaskId());
+            }
+            updatedTasks.add(currentTask);
+        }
+        return updatedTasks;
     }
 
-    //Remove
-    @Override
-    public void updateActorStatus(Long actorId, String status) throws TaskNotFoundException {
-        actorDao.updateActorStatus(actorId, status);
-    }
-
-    @Override
-    public Actor createActor(Actor actor) {
-        actorDao.save(actor);
-        return actor;
-    }
-
-    @Override
-    public Actor fetchActorByExternalId(String actorId) {
-        List<Actor> actors = actorDao.fetchByExternalId(actorId);
-        if(actors.size()==0)
-            return null;
-        return actors.get(0);
-    }
-
-    public void updateTaskActor(Long taskId, Actor actor) throws TaskNotFoundException {
-        createActor(actor);
-        Actor oldActor = taskDao.fetchById(taskId).getActor();
-        taskDao.updateTaskActor(taskId, actor);
-        Task task = taskDao.fetchById(taskId);
-        actor.getAssociatedTasks().add(task);
-        eventPublisher.publishActorAssignmentEvent(task, oldActor);
-    }
-
-    @Override
-    public void updateStatus(Long taskId, TaskTriggerEnum trigger) throws TaskNotFoundException, IllegalTaskStateTransitionException {
-        Task task = fetchTask(taskId);
-        TaskStatus newStatus = updateTaskStateMachine(task, trigger);
-        TaskStatus fromTaskStatus = task.getStatus();
-        taskDao.updateStatus(taskId, newStatus);
-        task.setStatus(newStatus);
-        eventPublisher.publishTaskStatusChangeEvent(task, fromTaskStatus);
-    }
-
-    private TaskStatus updateTaskStateMachine(Task task, TaskTriggerEnum trigger) throws IllegalTaskStateTransitionException {
+    private TaskStatusEnum updateTaskStateMachine(Task task, TaskTriggerEnum trigger) throws IllegalTaskStateTransitionException {
         try {
             log.info("updating status of task " + task.getId() + " with trigger " + trigger);
-            StateMachine<TaskStatus, TaskTriggerEnum> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
+            StateMachine<TaskStatusEnum, TaskTriggerEnum> stateMachine = new StateMachine(task.getStatus(), taskStateMachineConfig);
             stateMachine.fire(trigger);
             return stateMachine.getState();
         } catch (Exception e) {
@@ -167,214 +199,146 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         }
     }
 
-    //Remove
     @Override
-    public void updateETA(Long taskId, Long eta) throws TaskNotFoundException {
-        taskDao.updateETA(taskId, eta);
-
-    }
-
-    @Override
-    public List<Task> findTasks(SearchDto searchdto) {
-        return taskDao.search(searchdto);
-    }
-
-    @Override
-    public List<Task> getTasksForTaskGroup(Long taskGroupId) {
-        Set<Task> tasks = new HashSet<>();
-        List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
-        for (Relation relation : relations) {
-            tasks.add(relation.getTask());
-        }
-        return new ArrayList<>(tasks);
-    }
-
-    @Override
-    public TaskGroup getTaskGroupForTask(Task task) {
-        List<Relation> relations = task.getRelations();
-        if (relations.size() > 0) {
-            Relation relation = relations.get(0);
-            return relation.getTaskGroup();
+    public List<Task> updateRelations(List<UpdateRelationDto> relationUpdateInput) {
+        if (relationUpdateInput != null) {
+            log.info("Updating Relations for given input params ", relationUpdateInput.toString());
+            List<Task> tasks = new ArrayList<>();
+            for (UpdateRelationDto updateRelationDto : relationUpdateInput) {
+                Task task = updateRelationDto.getTask();
+                tasks.add(task);
+                for (Relation relation : task.getRelations()) {
+                    if (relation.getParentTaskId() == null || relation.getParentTaskId().equals(updateRelationDto.getOldParentId())) {
+                        relation.setParentTaskId(updateRelationDto.getNewParentId());
+                    }
+                }
+            }
+            return tasks;
         }
         return null;
     }
 
-    public List<Task> bulkInsertTasks(List<Task> tasks) {
-        return taskDao.bulkInsert(tasks);
+    /**
+     * Add more Subjects to a Task in Bulk
+     */
+    @Override
+    public List<Task> addSubjects(List<AddSubjectsDto> addSubjectInput) {
+        List<Task> updatedTasks = new ArrayList<>();
+        for (AddSubjectsDto addSubjectsDto : addSubjectInput) {
+            Task currentTask = addSubjectsDto.getTask();
+            if (currentTask != null) {
+                List<Subject> subjectsToAdd = addSubjectsDto.getSubjectsToAdd();
+                log.info("Adding Subjects to Task " + currentTask.getId() + " : " + subjectsToAdd);
+                if (subjectsToAdd != null && subjectsToAdd.size() > 0) {
+                    List<TaskSubjectRelation> newTaskSubjectRelations = new ArrayList<>();
+                    for (Subject subject : subjectsToAdd) {
+                        TaskSubjectRelation taskSubjectRelation = new TaskSubjectRelation();
+                        taskSubjectRelation.setSubject(subject);
+                        taskSubjectRelation.setTask(currentTask);
+                        if (subject.getTaskSubjectRelations() == null) {
+                            subject.setTaskSubjectRelations(new ArrayList<>());
+                        }
+                        subject.getTaskSubjectRelations().add(taskSubjectRelation);
+                        newTaskSubjectRelations.add(taskSubjectRelation);
+                    }
+                    currentTask.getTaskSubjectRelations().addAll(newTaskSubjectRelations);
+                }
+            }
+            updatedTasks.add(currentTask);
+        }
+        return updatedTasks;
+    }
+
+    /**
+     * Search Actors
+     */
+    @Override
+    public List<Actor> getActors(SearchActorDto searchActorDto) {
+
+        List<Actor> actorsForActorAttributes = null;
+        if (searchActorDto.getTypes() != null || searchActorDto.getExternalIds() != null) {
+            log.info("Searching Actors for " + searchActorDto.getTypes() + " & " + searchActorDto.getExternalIds());
+            actorsForActorAttributes = actorDao.searchActors(searchActorDto);
+        }
+
+        List<Actor> actorsForTaskGroup = null;
+        if (searchActorDto.getTaskGroupID() != null) {
+            log.info("Searching Actors for TaskGroup " + searchActorDto.getTaskGroupID());
+            actorsForTaskGroup = relationDao.fetchByTaskGroupId(searchActorDto.getTaskGroupID())
+                    .stream()
+                    .map(relation -> relation.getTask().getActor())
+                    .collect(Collectors.toList());
+        }
+
+        if (actorsForActorAttributes != null && actorsForTaskGroup != null) {
+            return ListUtils.intersection(actorsForActorAttributes, actorsForTaskGroup);
+        }
+        else if (actorsForActorAttributes != null) {
+            return actorsForActorAttributes;
+        }
+        else {
+            return actorsForTaskGroup;
+        }
+    }
+
+    @Override
+    public List<Subject> getSubjects(SearchSubjectDto searchSubjectDto) {
+        if (searchSubjectDto != null) {
+            log.info("Searching subjects for input param ", searchSubjectDto.toString());
+            return subjectDao.searchSubjects(searchSubjectDto);
+        }
+        return null;
+    }
+
+    @Override
+    public TaskGroup getTaskGroup(SearchTaskGroupDto searchTaskGroupDto) {
+        log.info("Searching taskgroup for ", searchTaskGroupDto);
+
+        if (searchTaskGroupDto.getTaskId() != null && searchTaskGroupDto.getTaskGroupId() != null) {
+
+            TaskGroup taskGroupForTaskGroupId = getTaskGroupForTaskGroupId(searchTaskGroupDto.getTaskGroupId());
+            TaskGroup taskGroupForTaskId = getTaskGroupForTaskId(searchTaskGroupDto.getTaskId());
+
+            if (taskGroupForTaskGroupId != null && taskGroupForTaskId != null) {
+                if (taskGroupForTaskGroupId.equals(taskGroupForTaskId)) {
+                    return taskGroupForTaskGroupId;
+                }
+                else {
+                    log.info("No TaskGroup found to match both TaskId {} and TaskGroupId {}", searchTaskGroupDto.getTaskId(), searchTaskGroupDto.getTaskGroupId());
+                    return null;
+                }
+            }
+            else {
+                return null;
+            }
+        }
+        else if (searchTaskGroupDto.getTaskGroupId() != null) {
+            return getTaskGroupForTaskGroupId(searchTaskGroupDto.getTaskGroupId());
+        }
+        else {
+            return getTaskGroupForTaskId(searchTaskGroupDto.getTaskId());
+        }
+    }
+
+    private TaskGroup getTaskGroupForTaskId(Long taskId) {
+        log.info("Searching TaskGroup for TaskId: " + taskId);
+        try {
+            return taskDao.fetchById(taskId).getRelations().stream().map(relation -> relation.getTaskGroup()).collect(Collectors.toList()).get(0);
+        } catch (NullPointerException npe) {
+            return null;
+        }
+    }
+
+    private TaskGroup getTaskGroupForTaskGroupId(Long taskGroupId) {
+        log.info("Searching TaskGroup for TaskGroupId: " + taskGroupId);
+        return taskGroupDao.fetchById(taskGroupId);
     }
 
     @Override
     public DirectedGraph<Task, TaskGraphEdge> getTaskGraphForTaskGroup(Long taskGroupId) {
-        return getTaskGraphs(taskGroupId);
-    }
-
-    @Override
-    public Task createRelation(Task task, TaskGroup taskGroup, Long parentTaskId) {
-        Relation relation = new Relation();
-        relation.setTaskGroup(taskGroup);
-        relation.setTask(task);
-        relation.setParentTaskId(parentTaskId);
-        task.getRelations().add(relation);
-        taskGroup.getRelations().add(relation);
-        relationDao.save(relation);
-        return task;
-    }
-
-    @Override
-    public void updateParentTask(Task task, Long parentTaskId) {
-        for (Relation relation : task.getRelations()) {
-            if (relation.getParentTaskId() == null) {
-                relation.setParentTaskId(parentTaskId);
-                relationDao.save(relation);
-                break;
-            }
-        }
-    }
-
-    @Override
-    public List<Task> getActiveTasksforSubject(String externalId) {
-        SearchDto searchDto = new SearchDto();
-        Subject subject = new Subject();
-        subject.setExternalId(externalId);
-        searchDto.setSubject(subject);
-        return taskDao.searchActiveTasksForSubject(searchDto);
-    }
-
-
-    @Override
-    public List<Task> getActiveTasksForActor(String actorExternalId){
-        Actor actor = new Actor();
-        actor.setExternalId(actorExternalId);
-        SearchDto searchDto = new SearchDto();
-        searchDto.setActors(Arrays.asList(actor));
-        return taskDao.searchActiveTasksForActor(searchDto);
-    }
-
-    @Override
-    public List<Task> getNextTasksForActor(String actorExternalId, Long completedTaskId)
-    {
-        List<Task> tasksForActor = new ArrayList<>();
-        List<Long> childIds = new ArrayList<>();
-        if(completedTaskId!=null)
-        {
-            List<Relation> relations = relationDao.fetchByParentTaskId(completedTaskId);
-
-            for(Relation relation:relations)
-            {
-                Task taskForRelation = relation.getTask();
-                Actor taskActor = taskForRelation.getActor();
-                childIds.add(taskForRelation.getId());
-
-                if(TaskManagerUtility.isTaskActive(taskForRelation.getStatus()) &&
-                        taskActor!=null && taskActor.getExternalId().equals(actorExternalId)){
-                    tasksForActor.add(taskForRelation);
-                }
-            }
-
-        }
-        if(tasksForActor.size()>0)
-            return tasksForActor;
-        else
-        {
-            List<Task> allChildTasksNextTask = new ArrayList<>();
-            for(Long childId:childIds)
-            {
-                List<Task> childsNextTask = getNextTasksForActor(actorExternalId, childId);
-                if(!allChildTasksNextTask.contains(childsNextTask))
-                {
-                    childsNextTask.removeAll(allChildTasksNextTask);
-                    allChildTasksNextTask.addAll(childsNextTask);
-
-                }
-            }
-            return allChildTasksNextTask;
-        }
-    }
-
-
-    //Revisit
-    @Override
-    public void updateAllActiveTasksStatusInTaskGroup(TaskGroup taskGroup, TaskStatus taskStatus)
-    {
-        DirectedGraph<Task,TaskGraphEdge> taskGraph = getTaskGraph(taskGroup.getId());
-        Set<Task> tasks = taskGraph.vertexSet();
-        for(Task task : tasks){
-            if(task.getStatus() != TaskStatus.CANCELLED)
-            {
-                task.setStatus(taskStatus);
-                taskDao.save(task);
-            }
-        }
-    }
-
-    //Remove
-    @Override
-    public TaskGroup fetchTaskGroupBySubjectExternalId(String externalId){
-        Subject subject =  subjectDao.fetchByExternalId(externalId);
-        List<Task> tasks = taskDao.fetchBySubjectId(subject.getId());
-        if(tasks.size()>0)
-            return getTaskGroupForTask(tasks.get(0));
-        return null;
-    }
-
-    //Remove
-    @Override
-    public Subject fetchSubjectByExternalId(String externalId){
-        return subjectDao.fetchByExternalId(externalId);
-    }
-
-    @Override
-    public void updateTaskAttribute(Task task, String attributeName, String attributeValue) {
-        for(TaskAttributes attributes: task.getTaskAttributes()) {
-            if (attributes.getAttributeName().equals(attributeName)) {
-                attributes.setAttributeValue(attributeValue);
-                taskDao.save(task);
-                return;
-            }
-        }
-        TaskAttributes newAttribute = new TaskAttributes();
-        newAttribute.setAttributeName(attributeName);
-        newAttribute.setAttributeValue(attributeValue);
-        newAttribute.setTask(task);
-        task.getTaskAttributes().add(newAttribute);
-        taskDao.save(task);
-    }
-
-    @Override
-    public List<Task> getAllTasks(List<Long> taskIds) {
-        return taskDao.getAll(taskIds);
-    }
-
-    @Override
-    public void releaseActor(Actor actor) {
-        eventPublisher.publishActorReleaseEvent(actor);
-    }
-
-    @Override
-    public List<TaskGroup> findActiveTaskGroupsWithAttribute(String attributeName, String attributeValue){
-        List<TaskAttributes> taskAttributes = taskAttributesDao.findTaskAttributes(attributeName, attributeValue);
-        List<Task> tasks = new ArrayList<>();
-        if(taskAttributes.size()>0){
-            for(TaskAttributes taskAttr:taskAttributes){
-                Task task = taskAttr.getTask();
-                if(!tasks.contains(task) && task.getStatus()!=TaskStatus.CANCELLED ){
-                    tasks.add(task);
-                }
-            }
-        }
-        Set<TaskGroup> taskGroups = new HashSet<>();
-        for(Task taskForAttribute : tasks)
-        {
-            TaskGroup taskGrp = getTaskGroupForTask(taskForAttribute);
-            if(!taskGroups.contains(taskGrp))
-                taskGroups.add(taskGrp);
-        }
-        return new ArrayList<>(taskGroups);
-    }
-
-    private DirectedGraph<Task, TaskGraphEdge> getTaskGraphs(Long taskGrpId){
-        DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
-        List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
+        log.info("Geeting task graph for task group id ", taskGroupId);
+        DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<>(TaskGraphEdge.class);
+        List<Relation> relations = taskGroupDao.fetchById(taskGroupId).getRelations();
         Map<Long, Task> taskMap = new HashMap<>();
         Map<Long, Set<Long>> parentTasksMap = new HashMap<>();
 
@@ -383,10 +347,11 @@ public class TaskManagerServiceImpl implements TaskManagerService {
             taskMap.put(task.getId(), task);
             if(relation.getParentTaskId()!=null){
                 Set<Long> parentTasks = parentTasksMap.get(task.getId());
-                if(parentTasks!=null){
+                if (parentTasks != null) {
                     parentTasks.add(relation.getParentTaskId());
                     parentTasksMap.put(task.getId(), parentTasks);
-                }else{
+                }
+                else {
                     Set<Long> parentTask = new HashSet<>();
                     parentTask.add(relation.getParentTaskId());
                     parentTasksMap.put(task.getId(), parentTask);
@@ -414,47 +379,59 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         return taskGraph;
     }
 
-    private DirectedGraph<Task, TaskGraphEdge> getTaskGraph(Long taskGrpId) {
-        DirectedGraph<Task, TaskGraphEdge> taskGraph = new DefaultDirectedGraph<Task, TaskGraphEdge>(TaskGraphEdge.class);
-        List<Relation> relations = taskGroupDao.fetchById(taskGrpId).getRelations();
+    @Override
+    public List<Task> updateSubjects(List<UpdateSubjectDto> updateSubjectInput) {
+        log.info("Updating subjects ");
         List<Task> tasks = new ArrayList<>();
-        for (Relation relation : relations) {
-            tasks.add(relation.getTask());
-        }
-        List<Long> taskIdsAddedToGraph = new ArrayList<>();
-        for (Task task : tasks) {
-            if (!taskIdsAddedToGraph.contains(task.getId())) {
-                taskGraph.addVertex(task);
-                taskIdsAddedToGraph.add(task.getId());
+        for(UpdateSubjectDto updateSubjectDto : updateSubjectInput){
+            log.info("Updating subject for task ", updateSubjectDto.getTask().getId() + "new subject " + updateSubjectDto.getNewSubject());
+            if(updateSubjectDto.getTask()!=null && updateSubjectDto.getOldSubject()!=null){
+                tasks.add(updateSubjectDto.getTask());
+                taskSubjectRelationDao.updateSubject(updateSubjectDto);
             }
-            List<Task> parentTasks = getParentTasks(relations, tasks, task);
-            for (Task parentTask : parentTasks) {
-                if (!taskIdsAddedToGraph.contains(parentTask.getId())) {
-                    taskGraph.addVertex(parentTask);
-                    taskIdsAddedToGraph.add(parentTask.getId());
-                }
-                taskGraph.addEdge(parentTask, task);
-            }
-
         }
-        return taskGraph;
+        SearchTaskDto searchTaskDto = new SearchTaskDto();
+        searchTaskDto.setTaskIds(tasks.stream().map(Task::getId).collect(Collectors.toList()));
+        List<Task> resultTasks = taskDao.search(searchTaskDto);
+        return resultTasks;
     }
 
-    private List<Task> getParentTasks(List<Relation> relations, List<Task> tasks, Task task) {
-        List<Task> parentTasks = new ArrayList<>();
-        for (Relation eachRelation : relations) {
-            if (eachRelation.getTask().getId() == task.getId()) {
-                Long parentTaskId = eachRelation.getParentTaskId();
-                if (parentTaskId != null) {
-                    for (Task eachTask : tasks) {
-                        if (eachTask.getId().longValue() == parentTaskId) {
-                            parentTasks.add(eachTask);
-                            break;
-                        }
+    @Override
+    public List<Task> getTasks(SearchTaskDto searchTaskDto) {
+        return taskDao.search(searchTaskDto);
+    }
+
+    @Override
+    public List<Task> addRelations(List<AddRelationDto> addRelationInput) {
+        log.info("Addign relations");
+        List<Task> tasks = new ArrayList<>();
+        Iterator<AddRelationDto> iterator = addRelationInput.iterator();
+        while(iterator.hasNext()){
+            AddRelationDto addRelationDto = iterator.next();
+            Task task = addRelationDto.getTask();
+            if(task!=null){
+                SearchTaskGroupDto searchTaskGroupDto = new SearchTaskGroupDto();
+                searchTaskGroupDto.setTaskId(task.getId());
+                TaskGroup taskGroup = getTaskGroup(searchTaskGroupDto);
+                if(taskGroup!=null){
+                    log.info("Adding relations in taskgroup " + taskGroup + "for task " + task);
+                    List<Long> parentsTaskIds = addRelationDto.getParentIds();
+                    List<Relation> relationsToAdd = new ArrayList<>();
+                    for(Long parentTaskId : parentsTaskIds){
+                        Relation relation = new Relation();
+                        relation.setTask(task);
+                        relation.setTaskGroup(taskGroup);
+                        relation.setParentTaskId(parentTaskId);
+                        task.getRelations().add(relation);
+                        taskGroup.getRelations().add(relation);
+                        relationsToAdd.add(relation);
                     }
+                    relationDao.bulkInsert(relationsToAdd);
+                    tasks.add(task);
                 }
             }
         }
-        return parentTasks;
+        return tasks;
     }
+
 }

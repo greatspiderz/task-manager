@@ -1,11 +1,13 @@
 package com.tasks.manager.util;
 
-import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
+
+import java.sql.Timestamp;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import java.sql.Timestamp;
+
+import lombok.NoArgsConstructor;
 
 @Converter(autoApply = true)
 @NoArgsConstructor

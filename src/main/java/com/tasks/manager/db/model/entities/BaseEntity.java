@@ -7,21 +7,30 @@ package com.tasks.manager.db.model.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.inject.persist.Transactional;
 import com.tasks.manager.db.model.listeners.BaseEntityListener;
 import com.tasks.manager.util.JodaDateTimeConverter;
-import lombok.*;
+
 import org.joda.time.DateTime;
 
-import javax.persistence.*;
-import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Version;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
 @MappedSuperclass
 @EntityListeners(BaseEntityListener.class)
 @EqualsAndHashCode(of = {"id"})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ToString(callSuper = true, exclude = {"createdAt","updatedAt"})
+@ToString(callSuper = true, exclude = {"createdAt", "updatedAt"})
 public class BaseEntity {
 
     @Id
@@ -36,12 +45,12 @@ public class BaseEntity {
     private Long version;
 
     @Column(name = "created_at")
-    @JsonProperty(value = "created_at")
+    @JsonIgnore
     @Convert(converter = JodaDateTimeConverter.class)
     private DateTime createdAt;
 
     @Column(name = "updated_at")
-    @JsonProperty(value = "updated_at")
+    @JsonIgnore
     @Convert(converter = JodaDateTimeConverter.class)
     private DateTime updatedAt;
 }

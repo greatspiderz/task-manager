@@ -1,9 +1,9 @@
-package com.tasks.manager.db.model.enums;
+package com.tasks.manager.enums;
 
 /**
  * Created by akshay.kesarwan on 05/11/15.
  */
-public enum TaskStatus {
+public enum TaskStatusEnum {
     NEW,
     IN_PROGRESS,
     COMPLETED,

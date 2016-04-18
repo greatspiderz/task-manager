@@ -1,38 +1,55 @@
 package com.tasks.manager.db.dao.jpa;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+
 import com.tasks.manager.db.dao.interfaces.ActorDao;
 import com.tasks.manager.db.model.entities.Actor;
-import com.tasks.manager.db.model.entities.Relation;
+import com.tasks.manager.dto.SearchActorDto;
+
+import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 /**
- * Created by shlok.chaurasia on 25/11/15.
+ * Created by palash.v on 30/03/16.
  */
-public class ActorDaoImpl extends BaseDaoImpl<Actor> implements ActorDao{
+public class ActorDaoImpl extends BaseDaoImpl<Actor> implements ActorDao {
+
     @Inject
-    public ActorDaoImpl(Provider<EntityManager> entityManagerProvider) {
-        super(entityManagerProvider);
+    public ActorDaoImpl(EntityManager entityManager) {
+        super(entityManager);
         entityClass = Actor.class;
     }
-    public List<Actor> fetchByExternalId(String externalId){
-        StringBuilder queryString = new StringBuilder("FROM Actor a WHERE external_id = (:external_id)");
-        ImmutableMap.Builder<String, Object> namedParamMapBuilder = ImmutableMap.<String, Object>builder();
-        namedParamMapBuilder.put("external_id", externalId);
-        ImmutableMap<String, Object> namedParamMap = namedParamMapBuilder.build();
-        List<Actor> actors = findByQueryAndNamedParams(null, null, queryString.toString(), namedParamMap);
-        return actors;
+
+    @Override
+    public List<Actor> searchActors(SearchActorDto searchActorDto) {
+
+        List<String> actorTypes = searchActorDto.getTypes();
+        List<String> externalIds = searchActorDto.getExternalIds();
+
+        Session session = (Session) getEntityManager().getDelegate();
+        Criteria criteria = session.createCriteria(Actor.class);
+
+        if (actorTypes != null && actorTypes.size() > 0) {
+            Criterion typeCriterion = (actorTypes.size() == 1) ?
+                    Restrictions.eq("type", actorTypes.get(0)) :
+                    Restrictions.in("type", actorTypes);
+            criteria.add(typeCriterion);
+        }
+
+        if (externalIds != null && externalIds.size() > 0) {
+            Criterion externalIdCriterion = (externalIds.size() == 1) ?
+                    Restrictions.eq("externalId", externalIds.get(0)) :
+                    Restrictions.in("externalId", externalIds);
+            criteria.add(externalIdCriterion);
+        }
+
+        return criteria.list();
     }
 
-    public void updateActorStatus(Long id, String status){
-        Actor actor = fetchById(id);
-        actor.setStatus(status);
-        save(actor);
-    }
 }

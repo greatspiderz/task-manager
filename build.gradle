@@ -1,5 +1,5 @@
 
-version = '1.0.17-SNAPSHOT'
+version = '0.1.50-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'idea'
@@ -7,7 +7,7 @@ apply plugin: 'maven'
 allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
-    group = 'com.fquick'
+    group = 'com.tasks'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -15,11 +15,7 @@ allprojects {
     repositories {
         mavenCentral()
         maven { url 'http://repo.maven.apache.org/maven2' }
-        maven { url 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-releases' }
-        maven { url 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshot' }
-        maven { url 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshot-local' }
     }
-
 
     dependencies {
         compile group: 'joda-time', name: 'joda-time', version: '2.3'
@@ -37,15 +33,11 @@ allprojects {
         compile 'com.google.guava:guava:15.0'
         compile 'org.jgrapht:jgrapht-core:0.9.1'
         compile 'org.hibernate:hibernate-envers:4.3.11.Final'
-        compile('com.fquick:fquick-hibernate-restbus-plugin:1.0.6-SNAPSHOT') {
-            exclude group: 'javax.ws.rs', module: 'javax.ws.rs-api'
-        }
+        compile 'commons-collections:commons-collections:3.2.2'
+        compile 'io.dropwizard:dropwizard-core:0.7.1'
         compile group: 'com.github.oxo42', name: 'stateless4j', version:'2.5.0'
         testCompile "junit:junit:4.11"
-        compile group: 'flipkart.scm', name: 'java-cas-client', version: '0.0.16'
-
     }
-
 
     task sourceJar(type: Jar) {
         classifier = 'sources'
@@ -58,11 +50,10 @@ allprojects {
 
     uploadArchives {
         repositories.mavenDeployer {
-            repository(url: 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-releases-local/')
-            snapshotRepository(url: 'http://artifactory.nm.flipkart.com:8081/artifactory/libs-snapshots-local/')
+            repository(url: '')
+            snapshotRepository(url: '')
         }
     }
-
 
 }
 
@@ -71,9 +62,7 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.7'
 }
 
-
 jar {
     baseName = 'task-manager'
-
-    version = '1.0.17-SNAPSHOT'
+    version = '0.1.50-SNAPSHOT'
 }

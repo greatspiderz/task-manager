@@ -1,55 +1,78 @@
 package com.tasks.manager.service.impl;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.persist.PersistService;
-import com.google.inject.persist.Transactional;
-import com.google.inject.persist.jpa.JpaPersistModule;
-import com.tasks.manager.BindingClassForTests;
-import com.tasks.manager.db.dao.jpa.BaseDaoImpl;
+
 import com.tasks.manager.db.exception.IllegalTaskStateTransitionException;
 import com.tasks.manager.db.exception.TaskNotFoundException;
-import com.tasks.manager.db.model.entities.*;
-import com.tasks.manager.db.model.enums.TaskStatus;
-import com.tasks.manager.dto.SearchDto;
+import com.tasks.manager.db.model.entities.Actor;
+import com.tasks.manager.db.model.entities.Subject;
+import com.tasks.manager.db.model.entities.Task;
+import com.tasks.manager.db.model.entities.TaskAttributes;
+import com.tasks.manager.db.model.entities.TaskGroup;
+import com.tasks.manager.db.model.entities.TaskSubjectRelation;
+import com.tasks.manager.dto.AddRelationDto;
+import com.tasks.manager.dto.AddSubjectsDto;
+import com.tasks.manager.dto.CreateTaskDto;
+import com.tasks.manager.dto.SearchActorDto;
+import com.tasks.manager.dto.SearchSubjectDto;
+import com.tasks.manager.dto.SearchTaskDto;
+import com.tasks.manager.dto.SearchTaskGroupDto;
 import com.tasks.manager.dto.TaskGraphEdge;
+import com.tasks.manager.dto.UpdateRelationDto;
+import com.tasks.manager.dto.UpdateSubjectDto;
+import com.tasks.manager.dto.UpdateTaskDto;
+import com.tasks.manager.enums.TaskStatusEnum;
 import com.tasks.manager.enums.TaskTriggerEnum;
+import com.tasks.manager.factory.TaskManagerServiceFactory;
+import com.tasks.manager.service.api.TaskManagerService;
+
+import org.jgrapht.DirectedGraph;
 import org.joda.time.DateTime;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * Created by shlok.chaurasia on 06/11/15.
  */
 public class TaskManagerServiceImplTest {
-    TaskManagerServiceImpl taskManagerService;
+
+    TaskManagerService taskManagerService;
     DateTime defaultDateTime;
-    TaskStatus defaultTaskStatus;
+    TaskStatusEnum defaultTaskStatus;
     String defaultTaskType;
     String defaultAttributeName;
     String defaultAttributeValue;
     PersistService persistService;
     Injector injector;
-    BaseDaoImpl transaction;
+    EntityManager entityManager;
 
     @Before
-    public void setUp(){
-
-        injector = Guice.createInjector(new BindingClassForTests(), new JpaPersistModule("test"));
+    public void setUp() {
+        injector = TaskManagerServiceFactory.getTestInjector();
         persistService = injector.getInstance(PersistService.class);
         persistService.start();
-        transaction = injector.getInstance(BaseDaoImpl.class);
-        transaction.getEntityManager().getTransaction().begin();
+        entityManager = injector.getInstance(EntityManager.class);
+        entityManager.getTransaction().begin();
         emptyDatabases();
-        taskManagerService = injector.getInstance(TaskManagerServiceImpl.class);
-        defaultDateTime = DateTime.parse("2015-10-09");
-        defaultTaskStatus = TaskStatus.NEW;
+        taskManagerService = TaskManagerServiceFactory.getTaskManagerServiceForTest();
+        defaultDateTime = DateTime.parse("2016-02-16"); // Date when the first commit of the revamped Library was made :)
+        defaultTaskStatus = TaskStatusEnum.NEW;
         defaultTaskType = "PICK";
         defaultAttributeName = "test_attribute";
         defaultAttributeValue = "test_value";
@@ -57,153 +80,165 @@ public class TaskManagerServiceImplTest {
 
     @Test
     public void testCreateAndFetchTaskGroup() {
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName, defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
+
+        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        TaskGroup fetchedTaskGroup = taskManagerService.getTaskGroup(new SearchTaskGroupDto(null, createdTaskGroupId));
         assertNotNull(fetchedTaskGroup);
         assertEquals(createdTaskGroupId, (long) fetchedTaskGroup.getId());
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
+
+        List<Task> taskList = fetchedTaskGroup.getRelations().stream().map(relation -> relation.getTask()).collect(Collectors.toList());
         assertEquals(1, taskList.size());
         Task task = taskList.get(0);
-
         assertEquals(task.getStatus(), defaultTaskStatus);
         assertEquals(task.getType(), defaultTaskType);
+
         List<TaskAttributes> taskAttributeList = task.getTaskAttributes();
         assertEquals(1, taskAttributeList.size());
         TaskAttributes taskAttribute = taskAttributeList.get(0);
         assertEquals(taskAttribute.getAttributeName(), defaultAttributeName);
         assertEquals(taskAttribute.getAttributeValue(), defaultAttributeValue);
-
-        taskManagerService.updateTaskAttribute(task, defaultAttributeName, "newAttr1Value");
-        taskManagerService.updateTaskAttribute(task, "newAttr2Name", "newAttr1Value");
-        Assert.assertEquals(2, taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId()).get(0).getTaskAttributes().size());
+        UpdateTaskDto updateTaskDto = new UpdateTaskDto();
+        updateTaskDto.setTaskAttributes(
+                new ArrayList<>(Arrays.asList(
+                        new TaskAttributes(task, defaultAttributeName, "newAttr1Value"),
+                        new TaskAttributes(task, "newAttr2Name", "newAttr1Value")
+                ))
+        );
+        updateTaskDto.setTaskId(task.getId());
+        try {
+            taskManagerService.updateTasks(Arrays.asList(updateTaskDto));
+        } catch (TaskNotFoundException e) {
+            fail("Exception thrown while adding new attributes to Task " + task.getId());
+        } catch (IllegalTaskStateTransitionException e) {
+            fail("Exception occurred while updating actor");
+        }
+        taskAttributeList = task.getTaskAttributes();
+        assertEquals(2, taskAttributeList.size());
         TaskAttributes taskAttribute1 = taskAttributeList.get(0);
         TaskAttributes taskAttribute2 = taskAttributeList.get(1);
         assertEquals(taskAttribute1.getAttributeValue(), "newAttr1Value");
         assertEquals(taskAttribute2.getAttributeValue(), "newAttr1Value");
+
     }
 
     @Test
-    public void testUpdateActor(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        String actorType = "Hero";
+    public void testGetActor() {
+        Task task = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        String actorType = "HERO";
+        String actorExternalId = "test_actor";
         Actor actor = new Actor();
         actor.setType(actorType);
-        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
-        Task task = taskList.get(0);
-        Assert.assertNull(task.getActor());
+        actor.setExternalId(actorExternalId);
+        assertNull(task.getActor());
         try {
-            taskManagerService.updateTaskActor(task.getId(), actor);
+            UpdateTaskDto updateTaskDto = new UpdateTaskDto(task.getId());
+            updateTaskDto.setActor(actor);
+            taskManagerService.updateTasks(Arrays.asList(updateTaskDto));
         } catch (TaskNotFoundException e) {
             fail("Exception thrown on updating actor");
+        } catch (IllegalTaskStateTransitionException e) {
+            fail("Exception occurred while updating actor");
         }
-
-        Task updatedTask = taskManagerService.fetchTask(task.getId());
-        System.out.println(actor.getId());
-        System.out.println(updatedTask.getActor().getId());
-        assertEquals(actor.getId(), updatedTask.getActor().getId());
-        assertEquals(actorType, updatedTask.getActor().getType());
+        SearchActorDto searchActorDto = new SearchActorDto();
+        searchActorDto.setTypes(Arrays.asList(actorType));
+        searchActorDto.setExternalIds(Arrays.asList(actorExternalId));
+        List<Actor> fetchedActors = taskManagerService.getActors(searchActorDto);
+        assertEquals(1, fetchedActors.size());
+        Actor fetchedActor = fetchedActors.get(0);
+        assertEquals(actor.getId(), fetchedActor.getId());
+        assertEquals(actorType, fetchedActor.getType());
+        assertEquals(actorExternalId, fetchedActor.getExternalId());
     }
 
-
     @Test
-    public void testUpdateTaskStatus(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskTriggerEnum triggerEnum = TaskTriggerEnum.IN_PROGRESS;
-        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
-        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
-        try{
-            taskManagerService.updateStatus(task.getId(), triggerEnum);
-        }
-        catch(TaskNotFoundException | IllegalTaskStateTransitionException e){
+    public void testUpdateActor() {
+        Task task = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        String actorType = "HERO";
+        Actor actor = new Actor();
+        actor.setType(actorType);
+        assertNull(task.getActor());
+        try {
+            UpdateTaskDto updateTaskDto = new UpdateTaskDto(task.getId());
+            updateTaskDto.setActor(actor);
+            taskManagerService.updateTasks(Arrays.asList(updateTaskDto));
+        } catch (TaskNotFoundException e) {
             fail("Exception thrown on updating actor");
+        } catch (IllegalTaskStateTransitionException e) {
+            fail("Exception occurred while updating actor");
         }
-        Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertEquals(TaskStatus.IN_PROGRESS, updatedTask.getStatus());
+        assertEquals(actor.getId(), task.getActor().getId());
+        assertEquals(actorType, task.getActor().getType());
     }
 
+
     @Test
-    public void testUpdateETA(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        long eta = 125;
-        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
-        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
+    public void testUpdateTaskStatus() {
+        Task task = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        TaskTriggerEnum triggerEnum = TaskTriggerEnum.IN_PROGRESS;
         try{
-            taskManagerService.updateETA(task.getId(), eta);
+            UpdateTaskDto updateTaskDto = new UpdateTaskDto(task.getId());
+            updateTaskDto.setTaskTriggerEnum(triggerEnum);
+            taskManagerService.updateTasks(Arrays.asList(updateTaskDto));
         }
         catch(TaskNotFoundException e){
-            fail("Exception thrown on updating task");
+            fail("Exception thrown on updating Task Status");
+        } catch (IllegalTaskStateTransitionException e) {
+            fail("Exception occurred while updating actor");
         }
-        Task updatedTask = taskManagerService.fetchTask(task.getId());
-        assertEquals(eta, (long)updatedTask.getEta());
+        assertEquals(TaskStatusEnum.IN_PROGRESS, task.getStatus());
     }
+
     @Test
-    public void testBulkInsert(){
-        TaskGroup t = new TaskGroup();
+    public void testBulkInsert() {
         Task t1 = new Task();
         t1.setType("PICK");
         Task t2 = new Task();
         t2.setType("PICK");
         Task t3 = new Task();
         t3.setType("PICK");
-        List<Task> listTasks = new ArrayList<>();
-        listTasks.add(t1);
-        listTasks.add(t2);
-        listTasks.add(t3);
-        TaskAttributes ta1 = new TaskAttributes();
-        ta1.setAttributeName("testname");
-        ta1.setAttributeValue("testvalue");
-        ta1.setTask(t1);
-        t1.setTaskAttributes(new ArrayList<>(Arrays.asList(ta1)));
-        TaskAttributes ta2 = new TaskAttributes();
-        ta2.setAttributeName("testname");
-        ta2.setAttributeValue("testvalue");
-        ta2.setTask(t2);
-        t2.setTaskAttributes(new ArrayList<>(Arrays.asList(ta2)));
-        TaskAttributes ta3 = new TaskAttributes();
-        ta3.setAttributeName("testname");
-        ta3.setAttributeValue("testvalue");
-        ta3.setTask(t3);
-        t3.setTaskAttributes(new ArrayList<>(Arrays.asList(ta3)));
-        taskManagerService.bulkInsertTasks(listTasks);
-        SearchDto searchdto = new SearchDto();
-        searchdto.setType("PICK");
-        List<Task> tasks = taskManagerService.findTasks(searchdto);
+
+        List<CreateTaskDto> createTaskDtos = new ArrayList<>(Arrays.asList(
+                new CreateTaskDto(t1),
+                new CreateTaskDto(t2),
+                new CreateTaskDto(t3)
+        ));
+        taskManagerService.createTasks(createTaskDtos);
+
+        SearchTaskDto searchTaskDto = new SearchTaskDto();
+        searchTaskDto.setTaskTypes(Arrays.asList("PICK"));
+        List<Task> tasks = taskManagerService.getTasks(searchTaskDto);
         assertEquals(3, (long) tasks.size());
     }
 
     @Test
     public void testFailedUpdate(){
-        long randomTaskGroupId = 12;
-        long eta = 125;
+        long randomTaskId = 0;
+        String taskType = "PICK";
+        UpdateTaskDto updateTaskDto = new UpdateTaskDto(randomTaskId);
+        updateTaskDto.setType(taskType);
         try{
-            taskManagerService.updateETA(randomTaskGroupId, eta);
+            taskManagerService.updateTasks(Arrays.asList(updateTaskDto));
             fail("Expected Exception to be thrown.But no exception thrown");
         }
         catch(TaskNotFoundException e){
+        } catch (IllegalTaskStateTransitionException e) {
+            fail("Exception occurred while updating actor");
         }
     }
 
     @Test
     public void testSearchTasks(){
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, "TRAVEL");
-
-        TaskGroup fetchedTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(fetchedTaskGroup.getId());
-        Task task = taskManagerService.fetchTask(taskList.get(0).getId());
-        SearchDto searchDto = new SearchDto();
-        searchDto.setType(task.getType());
-        searchDto.setStatus(task.getStatus());
-        List<Task> searchedTasks = taskManagerService.findTasks(searchDto);
+        Task task = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        SearchTaskDto searchTaskDto = new SearchTaskDto();
+        searchTaskDto.setTaskTypes(Arrays.asList(task.getType()));
+        searchTaskDto.setTaskStatuses(Arrays.asList(task.getStatus()));
+        searchTaskDto.setCreatedAtFromInMillis(DateTime.now().minusMinutes(10).getMillis());
+        searchTaskDto.setCreatedAtToInMillis(DateTime.now().plusMinutes(10).getMillis());
+        searchTaskDto.setStartTimeFromInMillis(defaultDateTime.getMillis());
+        searchTaskDto.setStartTimeToInMillis(defaultDateTime.getMillis());
+        searchTaskDto.setEndTimeFromInMillis(defaultDateTime.getMillis());
+        searchTaskDto.setEndTimeToInMillis(defaultDateTime.getMillis());
+        List<Task> searchedTasks = taskManagerService.getTasks(searchTaskDto);
         assertEquals(1, searchedTasks.size());
         Task searchedTask = searchedTasks.get(0);
         assertEquals(task.getStatus(), searchedTask.getStatus());
@@ -212,222 +247,181 @@ public class TaskManagerServiceImplTest {
 
     @Test
     public void testGetTaskForActor(){
-        Long taskgrp1 =createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        Long taskgrp2 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                TaskStatus.IN_PROGRESS, defaultTaskType);
-        Long taskgrp3 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskGroup taskGrp1 = taskManagerService.fetchTaskGroup(taskgrp1);
-        TaskGroup taskGrp2 = taskManagerService.fetchTaskGroup(taskgrp2);
+        Task task1 = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        Task task2 = createTestTask(defaultAttributeName, defaultAttributeValue, TaskStatusEnum.IN_PROGRESS, defaultTaskType);
         Actor actor = new Actor();
-        actor.setStatus("ASSIGNED");
         actor.setType("HERO");
         actor.setExternalId("A1233333");
-        Actor createdActor = taskManagerService.createActor(actor);
-        try {
-            taskManagerService.updateTaskActor(taskManagerService.getTasksForTaskGroup(taskGrp1.getId()).get(0).getId(), createdActor);
-            taskManagerService.updateTaskActor(taskManagerService.getTasksForTaskGroup(taskGrp2.getId()).get(0).getId(), createdActor);
-        }
-        catch(TaskNotFoundException e)
-        {
-            fail("Exception occured while updating task actor");
-        }
-        List<Task> activeTasks = taskManagerService.getActiveTasksForActor(createdActor.getExternalId());
-        assertEquals(1, activeTasks.size());
-    }
 
-    @Test
-    public void testGetTaskForActorByExternalId(){
-        Long taskgrp1 =createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                TaskStatus.IN_PROGRESS, defaultTaskType);
-        Long taskgrp2 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                TaskStatus.IN_PROGRESS, defaultTaskType);
-        Long taskgrp3 = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskGroup taskGrp1 = taskManagerService.fetchTaskGroup(taskgrp1);
-        TaskGroup taskGrp2 = taskManagerService.fetchTaskGroup(taskgrp2);
-        Actor actor = new Actor();
-        actor.setStatus("ASSIGNED");
-        actor.setType("HERO");
-        actor.setExternalId("FQWE123");
-        Actor createdActor = taskManagerService.createActor(actor);
+        UpdateTaskDto updateTaskDto1 = new UpdateTaskDto(task1.getId());
+        updateTaskDto1.setActor(actor);
+        UpdateTaskDto updateTaskDto2 = new UpdateTaskDto(task2.getId());
+        updateTaskDto2.setActor(actor);
         try {
-            taskManagerService.updateTaskActor(taskManagerService.getTasksForTaskGroup(taskGrp1.getId()).get(0).getId(), createdActor);
-            taskManagerService.updateTaskActor(taskManagerService.getTasksForTaskGroup(taskGrp2.getId()).get(0).getId(), createdActor);
+            taskManagerService.updateTasks(Arrays.asList(updateTaskDto1, updateTaskDto2));
+        } catch (TaskNotFoundException e) {
+            fail("Exception occurred while updating actor");
+        } catch (IllegalTaskStateTransitionException e) {
+            fail("Exception occurred while updating actor");
         }
-        catch(TaskNotFoundException e)
-        {
-            fail("Exception occured while updating task actor");
-        }
-        List<Task> activeTasks = taskManagerService.getActiveTasksForActor(createdActor.getExternalId());
+
+        SearchTaskDto searchTaskDto = new SearchTaskDto();
+        searchTaskDto.setActorExternalIds(Arrays.asList(actor.getExternalId()));
+
+        List<Task> activeTasks = taskManagerService.getTasks(searchTaskDto);
         assertEquals(2, activeTasks.size());
     }
 
     @Test
     public void testGetTaskForActorByExternalIdFailed(){
-        List<Task> activeTasks = taskManagerService.getActiveTasksForActor("AC123");
+        String randomActorExternalId = "blablabla";
+        Actor actor = new Actor();
+        actor.setType("HERO");
+        actor.setExternalId(randomActorExternalId);
+        SearchTaskDto searchTaskDto = new SearchTaskDto();
+        searchTaskDto.setActorExternalIds(Arrays.asList(actor.getExternalId()));
+        List<Task> activeTasks = taskManagerService.getTasks(searchTaskDto);
         assertEquals(0, activeTasks.size());
     }
 
 
     @Test
-    public void testfindActiveTaskgroupsWithAttribute(){
-        Long taskgrp1 =createTestTaskGroupWithTask("shipmentID","S1232",
-                TaskStatus.NEW, defaultTaskType);
-        List<TaskGroup> taskgrps = taskManagerService.findActiveTaskGroupsWithAttribute("shipmentID", "S1232");
-        assertEquals(1, taskgrps.size());
+    public void testFindActiveTasksWithAttribute(){
+        Task createdTask = createTestTask("shipmentID", "S1232", TaskStatusEnum.NEW, defaultTaskType);
+        SearchTaskDto searchTaskDto = new SearchTaskDto();
+        searchTaskDto.setTaskAttributes(Arrays.asList(new TaskAttributes(createdTask, "shipmentID", "S1232")));
+        List<Task> fetchedTasks = taskManagerService.getTasks(searchTaskDto);
+        assertEquals(1, fetchedTasks.size());
     }
+
     @Test
     public void testCreateTask(){
-        TaskGroup taskGroup = new TaskGroup();
-        taskGroup = taskManagerService.createTaskGroup(taskGroup);
         String subjectType = "Shipment";
         Subject subject = new Subject();
         subject.setType(subjectType);
         Task task = new Task();
-        task.setType("HAND_SHAKE");
-        task.setSubject(subject);
-        taskManagerService.createTask(task, taskGroup.getId());
-        TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(updatedTaskGroup.getId());
+        task.setType("HANDSHAKE");
+        task.setTaskSubjectRelations(Arrays.asList(new TaskSubjectRelation(subject, task)));
+        taskManagerService.createTasks(Arrays.asList(new CreateTaskDto(task)));
+        TaskGroup updatedTaskGroup  = taskManagerService.getTaskGroup(new SearchTaskGroupDto(task.getId(), null));
+        List<Task> taskList = updatedTaskGroup.getRelations().stream().map(relation -> relation.getTask()).collect(Collectors.toList());
         assertEquals(1, taskList.size());
-        assertEquals(taskList.get(0).getType(),"HAND_SHAKE");
+        assertEquals(taskList.get(0).getType(), "HANDSHAKE");
     }
 
     @Test
-    public void testSearchTasksForActor(){
-        TaskGroup taskGroup = new TaskGroup();
-        taskGroup = taskManagerService.createTaskGroup(taskGroup);
-        String subjectType = "Shipment";
-        Subject subject = new Subject();
-        subject.setType(subjectType);
-        Task task = new Task();
-        task.setType("HAND_SHAKE");
-        task.setSubject(subject);
-        Actor actor = new Actor();
-        actor.setExternalId("hero123");
-        actor.setType("HERO");
-        task.setActor(actor);
-        TaskAttributes ta = new TaskAttributes();
-        ta.setAttributeName("testname");
-        ta.setAttributeValue("testvalue");
-        ta.setTask(task);
-        task.setTaskAttributes(new ArrayList<>(Arrays.asList(ta)));
-        taskManagerService.createTask(task, taskGroup.getId());
-        TaskGroup updatedTaskGroup  = taskManagerService.fetchTaskGroup(taskGroup.getId());
+    public void testFetchTaskGraphStraightFlow() {
 
-        SearchDto searchDto = new SearchDto();
-        searchDto.setActors(Arrays.asList(actor));
-        List<Task> tasks = taskManagerService.findTasks(searchDto);
-        assertEquals(1, tasks.size());
-        assertEquals(tasks.get(0).getType(),"HAND_SHAKE");
-    }
+        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        TaskGroup taskGroup = taskManagerService.getTaskGroup(new SearchTaskGroupDto(null, createdTaskGroupId));
 
-    @Test
-    public void testUpdateActorStatus(){
-        Actor actor = new Actor();
-        actor.setStatus("IDLE");
-        actor.setType("HERO");
-        actor.setExternalId("H1123");
-        Actor createdActor = taskManagerService.createActor(actor);
-        assertEquals("IDLE", createdActor.getStatus());
-        try{
-            taskManagerService.updateActorStatus(createdActor.getId(), "OFFLINE");}
-        catch(Exception e)
-        {
-            fail("Exception thrown on updating actor");
-        }
-        Actor updatedActor = taskManagerService.fetchActorByExternalId("H1123");
-        assertEquals("OFFLINE", createdActor.getStatus());
-    }
-    @Test
-    public void testGetTaskGroupForTask(){
-        Long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskGroup createdTaskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        Task task = taskManagerService.getTasksForTaskGroup(createdTaskGroupId).get(0);
-        TaskGroup taskGroup = taskManagerService.getTaskGroupForTask(task);
-        assertEquals(taskGroup.getId(), createdTaskGroupId);
-    }
-
-
-    @Test
-    public void testFetchTaskGraphStraightFlow()
-    {
-        long createdTaskGroupId = createTestTaskGroupWithTask(defaultAttributeName,defaultAttributeValue,
-                defaultTaskStatus, defaultTaskType);
-        TaskGroup taskGroup = taskManagerService.fetchTaskGroup(createdTaskGroupId);
-        List<Task> taskList = taskManagerService.getTasksForTaskGroup(taskGroup.getId());
-
+        List<Task> taskList = taskGroup.getRelations().stream().map(relation -> relation.getTask()).collect(Collectors.toList());
         Task parentTask = taskList.get(0);
 
         Task handShakeTask = new Task();
-        handShakeTask.setType("HAND_SHAKE");
-        handShakeTask.setStatus(TaskStatus.NEW);
+        handShakeTask.setType("HANDSHAKE");
+        handShakeTask.setStatus(TaskStatusEnum.NEW);
         List<Long> parentIds = new ArrayList<>();
         parentIds.add(parentTask.getId());
-        taskManagerService.createTaskWithParentTasks(handShakeTask, createdTaskGroupId, parentIds);
-
-
+        taskManagerService.createTasks(Arrays.asList(new CreateTaskDto(handShakeTask, taskGroup)));
+        UpdateRelationDto updateRelationDto = new UpdateRelationDto(handShakeTask, null, parentTask.getId());
+        taskManagerService.updateRelations(Arrays.asList(updateRelationDto));
 
         Task travelTask1 = new Task();
         travelTask1.setType("TRAVEL");
-        travelTask1.setStatus(TaskStatus.NEW);
+        travelTask1.setStatus(TaskStatusEnum.NEW);
         parentIds = new ArrayList<>();
         parentIds.add(handShakeTask.getId());
-        taskManagerService.createTaskWithParentTasks(travelTask1, createdTaskGroupId, parentIds);
-
+        taskManagerService.createTasks(Arrays.asList(new CreateTaskDto(travelTask1, taskGroup)));
+        UpdateRelationDto updateRelationDto1 = new UpdateRelationDto(travelTask1, null, handShakeTask.getId());
+        taskManagerService.updateRelations(Arrays.asList(updateRelationDto1));
 
         Task travelTask2 = new Task();
         travelTask2.setType("TRAVEL");
-        travelTask2.setStatus(TaskStatus.NEW);
+        travelTask2.setStatus(TaskStatusEnum.NEW);
         parentIds = new ArrayList<>();
         parentIds.add(handShakeTask.getId());
-        taskManagerService.createTaskWithParentTasks(travelTask2, createdTaskGroupId, parentIds);
-
+        taskManagerService.createTasks(Arrays.asList(new CreateTaskDto(travelTask2, taskGroup)));
+        UpdateRelationDto updateRelationDto2 = new UpdateRelationDto(travelTask2, null, handShakeTask.getId());
+        taskManagerService.updateRelations(Arrays.asList(updateRelationDto2));
 
         Task deliver = new Task();
-        deliver.setType("DELIVER");
-        deliver.setStatus(TaskStatus.NEW);
+        deliver.setType("HANDSHAKE");
+        deliver.setStatus(TaskStatusEnum.NEW);
         parentIds = new ArrayList<>();
         parentIds.add(travelTask1.getId());
         parentIds.add(travelTask2.getId());
-        taskManagerService.createTaskWithParentTasks(deliver, createdTaskGroupId, parentIds);
+        taskManagerService.createTasks(Arrays.asList(new CreateTaskDto(deliver, taskGroup)));
+        UpdateRelationDto updateRelationDto3 = new UpdateRelationDto(deliver, null, travelTask1.getId());
+        taskManagerService.updateRelations(Arrays.asList(updateRelationDto3));
+        AddRelationDto addRelationDto = new AddRelationDto(deliver, Arrays.asList(travelTask2.getId()));
+        taskManagerService.addRelations(Arrays.asList(addRelationDto));
 
-        Set<TaskGraphEdge> deliverIncomingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).incomingEdgesOf(deliver);
-        Set<TaskGraphEdge> handShakeOutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(handShakeTask);
-        Set<TaskGraphEdge> parentOutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(parentTask);
-        Set<TaskGraphEdge> travel1OutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(travelTask1);
-        Set<TaskGraphEdge> travel2OutgoingEdges = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId).outgoingEdgesOf(travelTask2);
+        DirectedGraph<Task, TaskGraphEdge> taskGraph = taskManagerService.getTaskGraphForTaskGroup(createdTaskGroupId);
+        Set<TaskGraphEdge> deliverIncomingEdges     = taskGraph.incomingEdgesOf(deliver);
+        Set<TaskGraphEdge> handShakeOutgoingEdges   = taskGraph.outgoingEdgesOf(handShakeTask);
+        Set<TaskGraphEdge> parentOutgoingEdges      = taskGraph.outgoingEdgesOf(parentTask);
+        Set<TaskGraphEdge> travel1OutgoingEdges     = taskGraph.outgoingEdgesOf(travelTask1);
+        Set<TaskGraphEdge> travel2OutgoingEdges     = taskGraph.outgoingEdgesOf(travelTask2);
 
-        Assert.assertEquals(2, deliverIncomingEdges.size());
-        Assert.assertEquals(2, handShakeOutgoingEdges.size());
-        Assert.assertEquals(1, parentOutgoingEdges.size());
-        Assert.assertEquals(1, travel1OutgoingEdges.size());
-        Assert.assertEquals(1, travel2OutgoingEdges.size());
+        assertEquals(2, deliverIncomingEdges.size());
+        assertEquals(2, handShakeOutgoingEdges.size());
+        assertEquals(1, parentOutgoingEdges.size());
+        assertEquals(1, travel1OutgoingEdges.size());
+        assertEquals(1, travel2OutgoingEdges.size());
 
         for(TaskGraphEdge edge: parentOutgoingEdges) {
-            Assert.assertEquals(handShakeTask.getType(), edge.getTarget().getType());
-            Assert.assertEquals(handShakeTask.getId(), edge.getTarget().getId());
+            assertEquals(handShakeTask.getType(), edge.getTarget().getType());
+            assertEquals(handShakeTask.getId(), edge.getTarget().getId());
         }
 
         for(TaskGraphEdge edge: travel2OutgoingEdges) {
-            Assert.assertEquals(deliver.getType(), edge.getTarget().getType());
-            Assert.assertEquals(deliver.getId(), edge.getTarget().getId());
+            assertEquals(deliver.getType(), edge.getTarget().getType());
+            assertEquals(deliver.getId(), edge.getTarget().getId());
         }
 
         for(TaskGraphEdge edge: travel1OutgoingEdges) {
-            Assert.assertEquals(deliver.getType(), edge.getTarget().getType());
-            Assert.assertEquals(deliver.getId(), edge.getTarget().getId());
+            assertEquals(deliver.getType(), edge.getTarget().getType());
+            assertEquals(deliver.getId(), edge.getTarget().getId());
         }
-
 
     }
 
-    @Transactional(rollbackOn = Exception.class)
-    private long createTestTaskGroupWithTask(String attributeName, String attributeValue, TaskStatus status, String type)
-    {
+    @Test
+    public void testGetSubjects() {
+        Task task = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        SearchSubjectDto searchSubjectDto = new SearchSubjectDto();
+        searchSubjectDto.setTypes(Arrays.asList("Shipment"));
+        searchSubjectDto.setTaskIds(Arrays.asList(task.getId()));
+        List<Subject> subjectList = taskManagerService.getSubjects(searchSubjectDto);
+        assertEquals(1, subjectList.size());
+    }
+
+    @Test
+    public void testAddSubjects() {
+        Task task = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        Subject subject1 = new Subject();
+        subject1.setExternalId("subject1");
+        subject1.setType("Shipment");
+        AddSubjectsDto addSubjectsDto = new AddSubjectsDto(task, Arrays.asList(subject1));
+        taskManagerService.addSubjects(Arrays.asList(addSubjectsDto));
+        assertEquals(2, task.getTaskSubjectRelations().size());
+    }
+
+    @Test
+    public void testUpdateSubjects() {
+        Task task = createTestTask(defaultAttributeName, defaultAttributeValue, defaultTaskStatus, defaultTaskType);
+        Subject oldSubject = task.getTaskSubjectRelations().get(0).getSubject();
+        Subject newSubject = new Subject();
+        newSubject.setExternalId("newSubject");
+        newSubject.setType("Shipment");
+        UpdateSubjectDto updateSubjectDto = new UpdateSubjectDto(task, oldSubject, newSubject);
+        taskManagerService.updateSubjects(Arrays.asList(updateSubjectDto));
+        assertEquals(1, task.getTaskSubjectRelations().size());
+        assertEquals("newSubject", task.getTaskSubjectRelations().get(0).getSubject().getExternalId());
+    }
+
+    private long createTestTaskGroupWithTask(String attributeName, String attributeValue, TaskStatusEnum status, String type) {
         TaskAttributes ta = new TaskAttributes();
         ta.setAttributeName(attributeName);
         ta.setAttributeValue(attributeValue);
@@ -440,30 +434,54 @@ public class TaskManagerServiceImplTest {
         task.setStartTime(defaultDateTime);
         task.setEndTime(defaultDateTime);
         task.setTaskAttributes(new ArrayList<>(Arrays.asList(ta)));
-        task.setSubject(subject);
+        task.setTaskSubjectRelations(new ArrayList<>(Arrays.asList(new TaskSubjectRelation(subject, task))));
         ta.setTask(task);
-        TaskGroup taskGrp = new TaskGroup();
-        TaskGroup tskGrpCreated = taskManagerService.createTaskGroup(taskGrp);
-        taskManagerService.createTask(task,tskGrpCreated.getId());
-        return tskGrpCreated.getId();
+        CreateTaskDto createTaskDto = new CreateTaskDto();
+        createTaskDto.setTask(task);
+        List<Task> createdTasks = taskManagerService.createTasks(Arrays.asList(createTaskDto));
+        return createdTasks.get(0).getRelations().get(0).getTaskGroup().getId();
+    }
+
+    private Task createTestTask(String attributeName, String attributeValue, TaskStatusEnum status, String type) {
+        TaskAttributes ta = new TaskAttributes();
+        ta.setAttributeName(attributeName);
+        ta.setAttributeValue(attributeValue);
+        String subjectType = "Shipment";
+        Subject subject = new Subject();
+        subject.setType(subjectType);
+        Task task = new Task();
+        task.setStatus(status);
+        task.setType(type);
+        task.setStartTime(defaultDateTime);
+        task.setEndTime(defaultDateTime);
+        task.setTaskAttributes(new ArrayList<>(Arrays.asList(ta)));
+        task.setTaskSubjectRelations(new ArrayList<>(Arrays.asList(new TaskSubjectRelation(subject, task))));
+        ta.setTask(task);
+        CreateTaskDto createTaskDto = new CreateTaskDto();
+        createTaskDto.setTask(task);
+        List<Task> createdTasks = taskManagerService.createTasks(Arrays.asList(createTaskDto));
+        return createdTasks.get(0);
     }
 
     @After
-    public void tearDown(){
-        transaction.getEntityManager().getTransaction().commit();
+    public void tearDown() {
+        entityManager.getTransaction().commit();
     }
 
-    private void emptyDatabases(){
-        BaseDaoImpl baseDaoImpl = injector.getInstance(BaseDaoImpl.class);
-        baseDaoImpl.executeQuery("Delete from relation");
-        baseDaoImpl.executeQuery("Delete from task_attributes");
-        baseDaoImpl.executeQuery("Delete from task_AUD");
-        baseDaoImpl.executeQuery("Delete from task");
-        baseDaoImpl.executeQuery("Delete from task_group");
-        baseDaoImpl.executeQuery("Delete from subject");
-        baseDaoImpl.executeQuery("Delete from actor");
-        baseDaoImpl.executeQuery("Delete from inbound_messages");
-        baseDaoImpl.executeQuery("Delete from outbound_messages");
+    private void emptyDatabases() {
+        executeQuery("Delete from relation");
+        executeQuery("Delete from task_attributes");
+        executeQuery("Delete from task_AUD");
+        executeQuery("Delete from task_subject_relation");
+        executeQuery("Delete from task");
+        executeQuery("Delete from task_group");
+        executeQuery("Delete from subject");
+        executeQuery("Delete from actor");
+    }
+
+    public int executeQuery(final String queryStr) {
+        Query query = entityManager.createNativeQuery(queryStr);
+        return query.executeUpdate();
     }
 
 }

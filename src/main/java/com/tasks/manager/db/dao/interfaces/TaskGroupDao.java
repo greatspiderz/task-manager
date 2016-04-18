@@ -1,6 +1,7 @@
 package com.tasks.manager.db.dao.interfaces;
 
 import com.google.inject.ImplementedBy;
+
 import com.tasks.manager.db.dao.jpa.TaskGroupDaoImpl;
 import com.tasks.manager.db.model.entities.TaskGroup;
 
@@ -9,4 +10,5 @@ import com.tasks.manager.db.model.entities.TaskGroup;
  */
 @ImplementedBy(TaskGroupDaoImpl.class)
 public interface TaskGroupDao extends BaseDao<TaskGroup> {
+
 }

@@ -1,20 +1,36 @@
 package com.tasks.manager.db.model.entities;
 
-import com.fasterxml.jackson.annotation.*;
-import javax.validation.constraints.NotNull;
-import com.tasks.manager.db.model.enums.TaskStatus;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.tasks.manager.enums.TaskStatusEnum;
 import com.tasks.manager.util.JodaDateTimeConverter;
-import lombok.*;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
+
 import org.hibernate.envers.Audited;
 import org.joda.time.DateTime;
 
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Created by akshay.kesarwan on 27/10/15.
@@ -24,14 +40,14 @@ import java.util.List;
 @Table(name = "task")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper=true, of = {"type"})
-@ToString(callSuper = true, exclude = {"relations"})
-public class Task extends BaseEntity{
+@ToString(callSuper = true, exclude = {"relations", "taskSubjectRelations"})
+public class Task extends BaseEntity {
 
     @NotNull
     @Audited
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private TaskStatus status = TaskStatus.NEW;
+    private TaskStatusEnum status = TaskStatusEnum.NEW;
 
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "actor_id")
@@ -39,13 +55,6 @@ public class Task extends BaseEntity{
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
     @JsonIdentityReference(alwaysAsId = true)
     private Actor actor;
-
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-    @JoinColumn(name = "subject_id")
-    @JsonProperty(value = "subject_id")
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "external_id")
-    @JsonIdentityReference(alwaysAsId = true)
-    private Subject subject;
 
     @NotNull
     @Column(name = "type")
@@ -72,6 +81,10 @@ public class Task extends BaseEntity{
     @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Relation> relations;
+
+    @OneToMany(mappedBy = "task", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<TaskSubjectRelation> taskSubjectRelations;
 
     @JsonProperty(value = "tenant_id")
     @Column(name = "tenant_id")
