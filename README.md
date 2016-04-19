@@ -11,21 +11,6 @@ To use this library just include the following stuff in your project: -
 
 * Start by adding the Entity Declarations to your persistence.xml. Task Manager uses TaskGroup, Task, TaskAttributes,
  Relation, Actor, Subject .
-```
-<?xml version="1.0" encoding="UTF-8"?>
-<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
-    <persistence-unit name="fquick-spider" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-            <class>com.tasks.manager.db.model.entities.TaskGroup</class>
-            <class>com.tasks.manager.db.model.entities.Task</class>
-            <class>com.tasks.manager.db.model.entities.TaskAttributes</class>
-            <class>com.tasks.manager.db.model.entities.Relation</class>
-            <class>com.tasks.manager.db.model.entities.Actor</class>
-            <class>com.tasks.manager.db.model.entities.Subject</class>
-            <exclude-unlisted-classes>false</exclude-unlisted-classes>
-    </persistence-unit>
-</persistence>
-```
 
 * The library provides funtionalities to view the whole WF for a particular set of task group as a graph. For that
 jgraphT ```{ url 'https://github.com/jgrapht/jgrapht' }``` library is used.
